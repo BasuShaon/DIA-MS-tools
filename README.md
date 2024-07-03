@@ -4,13 +4,9 @@ Automated pipeline for post-processing proteomes acquired with DIA-MS. Modules i
 
 ## Requirements
 
-Python 3.11 
+- Python 3.11 (dependencies in 'requirements.txt')
 
-- Install packages with pip in 'requirements.txt' (anndata, datetime, gseapy, math, matplotlib, numpy, pandas, scanpy, scipy, seaborn, scikit-learn, statsmodels)
-
-R 4.3.1 
-
-- Module will connect to CRAN mirror (AnnotationDbi, Bioconductor, org.Hs.eg.db, data.table, iq)
+- R 4.3.1 (installs required packages from CRAN)
 
 ## Installation 
 
