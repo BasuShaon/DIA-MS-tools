@@ -88,7 +88,7 @@ def main(matrix_fname, batchdata_fname, output_fname):
 
     path = input_summarizer.save_output(input_batched_long, os.path.join(directory2, output_fname + 'filtered_95_imputed_50_ltrfm_batched_long'))
 
-    input_summarizer.maxlfq(longform=path, convert=True)
+    input_summarizer.maxlfq(longform=path, convert=False) # Set to true if you need to swap from UNIPROT to SYMBOL
 
 if __name__ == '__main__':
 

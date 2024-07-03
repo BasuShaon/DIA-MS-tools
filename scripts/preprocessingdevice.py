@@ -7,6 +7,7 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.colors import ListedColormap
+import os
 import scanpy as sc
 from scipy.cluster.hierarchy import leaves_list
 import seaborn as sns
@@ -1195,8 +1196,6 @@ class Summarizer(Device):
         return  
 
 # %% Preprocessing Direct Run 
-
-import os
 
 dir = os.path.dirname(__file__)
 
