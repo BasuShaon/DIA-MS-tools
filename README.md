@@ -5,10 +5,12 @@ Automated pipeline for post-processing proteomes acquired with DIA-MS. Modules i
 ## Requirements
 
 - Python 3.11 
-  (anndata, datetime, gseapy, math, matplotlib, numpy, scanpy, scipy, seaborn, scikit-learn, statsmodels) 
+
+(anndata, datetime, gseapy, math, matplotlib, numpy, scanpy, scipy, seaborn, scikit-learn, statsmodels) 
 
 - R 4.3.1 / Bioconductor 3.18 
-  (AnnotationDbi, data.table, org.Hs.eg.db, iq)
+
+(AnnotationDbi, data.table, org.Hs.eg.db, iq)
 
 ## Installation 
 
