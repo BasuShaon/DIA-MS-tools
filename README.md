@@ -6,7 +6,7 @@ Automated pipeline for post-processing proteomes acquired with DIA-MS. Modules i
 
 - Python 3.11 (dependencies in 'requirements.txt')
 
-- R 4.3.1 (installs required packages from CRAN)
+- R 4.3.1 (installs packages from CRAN at runtime)
 
 ## Installation 
 
