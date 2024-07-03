@@ -1,4 +1,4 @@
-# Data-independent acquisition mass spectrometry (DIA-MS) tools
+# Data-independent acquisition mass spectrometry tools
 
 Automated pipeline for post-processing proteomes acquired with DIA-MS. Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
 
