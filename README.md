@@ -4,17 +4,15 @@ Automated pipeline for post-processing proteomes acquired with DIA-MS. Modules i
 
 ## Requirements
 
-- Python 3.11 (anndata, datetime, gseapy, math, matplotlib, numpy, scanpy, scipy, seaborn, scikit-learn, statsmodels) 
+- Python 3.11 
+  (anndata, datetime, gseapy, math, matplotlib, numpy, scanpy, scipy, seaborn, scikit-learn, statsmodels) 
 
-- R 4.3.1 / Bioconductor 3.18 (AnnotationDbi, data.table, org.Hs.eg.db, iq)
+- R 4.3.1 / Bioconductor 3.18 
+  (AnnotationDbi, data.table, org.Hs.eg.db, iq)
 
 ## Installation 
 
-Clone 'DIA-MS-tools' locally and cd into directory. Install requirements in 'requirements.txt' using pip / venv.
-
-## Directory setup
-
-Make 2 sub folders within cloned repo directory (named 'input' 'output') and copy following files into 'input':
+Clone 'DIA-MS-tools' locally, cd into directory, and install python packages in 'requirements.txt'. Before running, make an input subfolder within the directory (named 'input'), and copy the following two files:
 
 ### DIA-MS output (.tsv)
 
@@ -24,9 +22,9 @@ Precursor matrix containing sample IDs as columns and precursor intensities as r
 
 Metadata file which contains batch IDs as a categorical feature (column) and sample IDs as rows. Target column must be named 'MS.Batch'.
 
-## Execution
+## Execute python script (main.py)
 
-Execute main.py from root of cloned directory.
+Navigate to locally cloned repository, create an output subfolder (named 'output'), and execute main.py.
 
 python3 main.py -m <matrix_file> -b <batch_data_file> -o <output_prefix>
 
