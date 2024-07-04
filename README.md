@@ -1,10 +1,10 @@
-# Data-independent acquisition mass spectrometry tools
+# DIA-MS-tools
 
 Automated pipeline for pre-processing proteomes acquired with DIA-MS. Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
 
 ## Requirements
 
-- Python 3.11.5 (dependencies in 'requirements.txt')
+- Python 3.11.5 (install dependencies in local or virtual environment from 'requirements.txt')
 
 - R 4.3.1 (installs required packages from CRAN at run time)
 
