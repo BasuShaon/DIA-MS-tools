@@ -10,7 +10,7 @@ Automated pipeline for pre-processing proteomes acquired with data-independent a
 
 ## Installation 
 
-Clone 'DIA-MS-tools' locally and cd into the directory. Before running, make an input subfolder within the directory (named 'input'), and copy the following two files:
+Clone 'DIA-MS-tools' locally and cd into root directory. Before running, make an input subfolder (named 'input'), and copy the following two files:
 
 ### DIA-MS output (.tsv)
 
