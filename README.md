@@ -4,9 +4,9 @@ Automated pipeline for pre-processing proteomes acquired with data-independent a
 
 ## Requirements
 
-- Python 3.11.5 (install dependencies in local or virtual environment from 'requirements.txt')
+- Python 3.11.5 (download dependencies in local or virtual environment from 'requirements.txt')
 
-- R 4.3.1 (installs required packages from CRAN at run time)
+- R 4.3.1 (downloads required packages from CRAN at run time)
 
 ## Installation 
 
