@@ -20,7 +20,7 @@ Precursor matrix containing sample IDs as columns and precursor intensities as r
 
 Metadata file which contains batch IDs as a categorical feature (column) and sample IDs as rows. Target column must be named 'MS.Batch'.
 
-## Execute python script (main.py)
+## Execution
 
 Create an output subfolder in directory (named 'output'), and execute main.py.
 
