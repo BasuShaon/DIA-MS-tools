@@ -1,6 +1,6 @@
 # DIA-MS-tools
 
-Automated pipeline for pre-processing proteomes acquired with DIA-MS. Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
+Automated pipeline for pre-processing proteomes acquired with data-independent acquisition mass spectrometry (DIA-MS). Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ Metadata file which contains batch IDs as a categorical feature (column) and sam
 
 ## Execute python script (main.py)
 
-Navigate to locally cloned repository, create an output subfolder (named 'output'), and execute main.py.
+Create an output subfolder in directory (named 'output'), and execute main.py.
 
 python3 main.py -m <matrix_file> -b <batch_data_file> -o <output_prefix>
 
