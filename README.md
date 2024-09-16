@@ -29,3 +29,7 @@ Create an output subfolder in directory (named 'output'), and execute main.py.
 python3 main.py -m <matrix_file> -b <batch_data_file> -o <output_prefix>
 
 ![output directory](https://github.com/BasuShaon/DIA-MS-tools/blob/main/screen.png)
+
+## Output
+
+![output directory](https://github.com/BasuShaon/DIA-MS-tools/blob/main/output.png)
