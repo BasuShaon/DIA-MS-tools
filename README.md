@@ -1,5 +1,7 @@
 # DIA-MS-tools
 
+![output directory](https://github.com/BasuShaon/DIA-MS-tools/blob/main/pipe.png)
+
 Automated pipeline for pre-processing proteomes acquired with data-independent acquisition mass spectrometry (DIA-MS). Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
 
 ## Requirements
