@@ -1203,7 +1203,9 @@ directory = os.path.join(dir, '..', 'input')
 
 directory2 = os.path.join(dir, '..', 'output')
 
-matrix_fname = '/SB_PROTAC_prmatrix_plateswap_240606a.tsv'
+matrix_fname = '/SB_SpeedyPasef_prmatrix_plateswap_240314a.tsv' # This is the output from DIA-NN 1.8.1 on Ralser cluster
+
+matrix_fname_mbr = 'SB_PROTAC_prmatrix_plateswap_240606a.tsv' # This is the output from Nir's DIA-NN slurm
 
 batchdata_fname = '/20240314_AF_50-0121_metadata_plateSwapRequested.xlsx'
 
@@ -1220,7 +1222,7 @@ if __name__ == '__main__':
                              delimiter='\t', 
                              index_col=[0,1], 
                              header = [0]).T   
-    # Filter 
+    # %% Filter 
 
     pasef_filter = DerivativeFilter(pasef_data) 
 
@@ -1232,7 +1234,7 @@ if __name__ == '__main__':
 
     # %%
 
-    pasef_filter.plot_peptide_stats(pasef = pasef_peptide_stats, swath = fda_peptide_stats, label = ['PROTAC library - timsToF  \nHCC DIA-NN 1.8.1 + MBR', 'FDA library - tripleToF \nHCC DIA-NN 1.8.1 + MBR'])
+    pasef_filter.plot_peptide_stats(pasef = pasef_peptide_stats, swath = fda_peptide_stats, label = ['PROTAC library - timsToF  \nHepG2 speclib, DIA-NN 1.8.1', 'FDA library - tripleToF \nHepG2 speclib, DIA-NN 1.8.1'])
 
     # %%
 
