@@ -6,7 +6,7 @@
 
 Data-driven pipeline to build complete proteomes with reduced batch effects. Resulting abundance follows a normal probability distribution. 
 
-Designed for high-throughput proteomic drug screens in mammalian cells using data-independent-acquisition mass-spectrometry (DIA-MS). Tested thus far on fragments detected from 1000, 2000, and 5000+ sample drug screens (subjected to DAI-MS [dia-PASEF / scanning SWATH] + DIA-NN).
+Designed for high-throughput proteomic drug screens in mammalian cells using data-independent-acquisition mass-spectrometry (DIA-MS). Tested on 1000, 2000, and 5000+ sample drug screens (subjected to DAI-MS [dia-PASEF / scanning SWATH] + DIA-NN), as reported in ___.
 
 More samples (1000+) & fragments (500000+) the better. 
 
