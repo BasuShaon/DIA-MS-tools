@@ -22,11 +22,11 @@ Modules include QC, filtration, imputation, batch correction, and a wrapper for 
 
 Clone 'DIA-MS-tools' locally and cd into root directory. Before running, make an input subfolder (named 'input'), and copy the following two files:
 
-### DIA-MS output (.tsv)
+### MS data (.tsv)
 
 Precursor matrix containing sample IDs as columns and precursor intensities as rows. Rows should be indexed by protein and fragment ID (first and second columns). 
 
-### Metadata (.tsv)
+### Batch data (.tsv)
 
 Metadata file which contains batch IDs as a categorical feature (column) and sample IDs as rows. Target column must be named 'MS.Batch'.
 
