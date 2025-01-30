@@ -6,9 +6,9 @@
 
 Data-driven pipeline to build complete proteomes with reduced batch effects. Resulting abundance follows a normal probability distribution. 
 
-Primarily for processing high-throughput drug screens in mammalian cells using data-independent-acquisition mass-spectrometry (DIA-MS). Tested on 1000, 2000, and 5000 sample screening campaigns so far (subjected to DIA-MS [dia-PASEF / scanning SWATH] + DIA-NN).
+Primarily for processing high-throughput proteomics in mammalian cells using data-independent-acquisition mass-spectrometry (DIA-MS). 
 
-More samples (1000+) & fragments (500000+) the better. 
+Tested on 1000, 2000, and 5000 sample drug screens so far (subjected to DIA-MS [dia-PASEF & scanning SWATH modes] and DIA-NN) - more samples (1000+) & fragments (500000+) the better. 
 
 Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
 
