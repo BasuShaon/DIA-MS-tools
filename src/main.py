@@ -1,34 +1,47 @@
-# %% Preprocessing Direct Run 
-import pandas as pd
+# Establish absolute path
 import sys
 import os
 import argparse
-sys.path.append(os.path.join(os.path.dirname(__file__), 'scripts'))
-from preprocessingdevice import DerivativeFilter, Imputer, Batcher, Summarizer  # type: ignore
+sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-# %%
+# Import devices
+from derivativefilter import DerivativeFilter
+from imputer import Imputer
+from batcher import Batcher
+from summarizer import Summarizer
+
+# For read into pipeline
+import pandas as pd
+
+# %% Pipeline Assembly
 
 def main(matrix_fname, batchdata_fname, output_fname):
 
-    dir = os.path.dirname(__file__)
+    dir = os.path.abspath(os.path.join(os.getcwd())) # path to src folder
 
-    directory = os.path.join(dir, 'input')
+    directory = os.path.join(dir, '..', 'input') # path for input folder
 
-    directory2 = os.path.join(dir, 'output')
+    directory2 = os.path.join(dir,'..', 'output') # path for output folder
 
-    # Failsafe if no arguments are parsed, works on local repo
+    # Failsafe if no arguments are parsed, works on local repo / unittest folder
 
     if matrix_fname is None:
 
         matrix_fname = 'SB_PROTAC_prmatrix_plateswap_240606a.tsv'
 
+        directory = os.path.join(dir, '..', 'unittest') 
+
     if batchdata_fname is None:
 
         batchdata_fname = '20240314_AF_50-0121_metadata_plateSwapRequested.xlsx'
 
+        directory = os.path.join(dir, '..', 'unittest') 
+
     if output_fname is None:
 
         output_fname = 'SB_PROTAC_prmatrix'
+
+        directory2 = os.path.join(dir,'..', 'unittest')
 
     print(f"Matrix file: {matrix_fname}")
 
@@ -36,14 +49,14 @@ def main(matrix_fname, batchdata_fname, output_fname):
 
     print(f"Output file prefix: {output_fname}")
 
-    # Load data
+    # Load MS fragment intensities
 
     input_data = pd.read_csv(os.path.join(directory, matrix_fname),
                              delimiter='\t', 
                              index_col=[0,1], 
                              header=[0]).T   
 
-    # Initialize Filter Dev 
+    # Filter frags based on detection
 
     input_filter = DerivativeFilter(input_data) 
 
@@ -53,7 +66,7 @@ def main(matrix_fname, batchdata_fname, output_fname):
 
     input_filter.save_output(input_filtered.T, os.path.join(directory2, output_fname + '_filtered_95'))
 
-    # Impute 
+    # Impute missing frags
 
     input_imputer = Imputer(input_filtered, threshold=50)
 
@@ -65,7 +78,7 @@ def main(matrix_fname, batchdata_fname, output_fname):
 
     input_imputer.save_output(input_imputed.T, os.path.join(directory2, output_fname + '_filtered_95_imputed_50'))
 
-    # Batch Correct 
+    # Batch-correct on MS run date
 
     input_batcher = Batcher(input_imputed, 
                             path=os.path.join(directory, batchdata_fname),
@@ -78,7 +91,7 @@ def main(matrix_fname, batchdata_fname, output_fname):
     
     input_batcher.save_output(input_batcher.output.T, os.path.join(directory2, output_fname + '_filtered_95_imputed_50_ltrfm_batched'))
 
-    # Summarize 
+    # Summarize to final proteome
 
     input_summarizer = Summarizer(input_batcher.output, 
                                   lfqscript=os.path.join(dir, 'maxLFQ.R'),
@@ -89,6 +102,8 @@ def main(matrix_fname, batchdata_fname, output_fname):
     path = input_summarizer.save_output(input_batched_long, os.path.join(directory2, output_fname + 'filtered_95_imputed_50_ltrfm_batched_long'))
 
     input_summarizer.maxlfq(longform=path, convert=False) # Set to true if you need to swap from UNIPROT to SYMBOL
+
+# %% For commandline run
 
 if __name__ == '__main__':
 

@@ -2,11 +2,21 @@
 
 ![output directory](https://github.com/BasuShaon/DIA-MS-tools/blob/main/docs/pipe.png)
 
-Automated pipeline for pre-processing proteomes acquired with data-independent acquisition mass spectrometry (DIA-MS). Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
+## Description
+
+Data-driven pipeline to build complete proteomes with reduced batch effects. Resulting abundance follows a normal probability distribution. 
+
+Designed for high-throughput proteomic drug screens in mammalian cells using data-independent-acquisition mass-spectrometry (DIA-MS). 
+
+Tested thus far on fragments detected from 1000, 2000, and 5000+ sample drug screens, subjugated to dia-PASEF and Scanning-SWATH-MS then deconvoluted with DIA-NN.
+
+It should work using detected fragments from any DIA-MS setup in theory. More samples (1000+) & fragments (500000+) the better. 
+
+Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
 
 ## Requirements
 
-- Python 3.11.5 (download dependencies in local or virtual environment from 'requirements.txt')
+- Python 3.11.5 (download dependencies in local or virtual environment from 'requirements.txt') 
 
 - R 4.3.1 (downloads required packages from CRAN at run time)
 
