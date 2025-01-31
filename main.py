@@ -1,8 +1,8 @@
-# Establish absolute path
+# %% Establish absolute path
 import sys
 import os
 import argparse
-sys.path.append(os.path.join(os.path.dirname(__file__)))
+sys.path.append(os.path.abspath("src"))
 
 # Import devices
 from derivativefilter import DerivativeFilter
@@ -17,11 +17,11 @@ import pandas as pd
 
 def main(matrix_fname, batchdata_fname, output_fname):
 
-    dir = os.path.abspath(os.path.join(os.getcwd())) # path to src folder
+    dire = os.path.abspath(os.path.join(os.getcwd())) # path to repo 
 
-    directory = os.path.join(dir, '..', 'input') # path for input folder
+    directory = os.path.join(dire, 'input') # path for input folder
 
-    directory2 = os.path.join(dir,'..', 'output') # path for output folder
+    directory2 = os.path.join(dire, 'output') # path for output folder
 
     # Failsafe if no arguments are parsed, works on local repo / unittest folder
 
@@ -29,19 +29,13 @@ def main(matrix_fname, batchdata_fname, output_fname):
 
         matrix_fname = 'SB_PROTAC_prmatrix_plateswap_240606a.tsv'
 
-        directory = os.path.join(dir, '..', 'unittest') 
-
     if batchdata_fname is None:
 
         batchdata_fname = '20240314_AF_50-0121_metadata_plateSwapRequested.xlsx'
 
-        directory = os.path.join(dir, '..', 'unittest') 
-
     if output_fname is None:
 
         output_fname = 'SB_PROTAC_prmatrix'
-
-        directory2 = os.path.join(dir,'..', 'unittest')
 
     print(f"Matrix file: {matrix_fname}")
 
@@ -94,12 +88,12 @@ def main(matrix_fname, batchdata_fname, output_fname):
     # Summarize to final proteome
 
     input_summarizer = Summarizer(input_batcher.output, 
-                                  lfqscript=os.path.join(dir, 'maxLFQ.R'),
-                                  directory=dir)
+                                  lfqscript=os.path.join(dire, 'maxLFQ.R'),
+                                  directory=dire)
     
     input_batched_long = input_summarizer.input_long
 
-    path = input_summarizer.save_output(input_batched_long, os.path.join(directory2, output_fname + 'filtered_95_imputed_50_ltrfm_batched_long'))
+    path = input_summarizer.save_output(input_batched_long, os.path.join(directory2, output_fname + '_filtered_95_imputed_50_ltrfm_batched_long'))
 
     input_summarizer.maxlfq(longform=path, convert=False) # Set to true if you need to swap from UNIPROT to SYMBOL
 

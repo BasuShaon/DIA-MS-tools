@@ -8,6 +8,7 @@
 input/
 output/
 unittest/
+unit_test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

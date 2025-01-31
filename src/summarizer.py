@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import leaves_list
 import seaborn as sns
 from sklearn.decomposition import PCA
+import subprocess
 
 class Summarizer(Device):
 
@@ -44,21 +45,11 @@ class Summarizer(Device):
 
         return
 
-    def get_before_last_underscore(self, string):
-
-        parts = string.split('/')
-
-        if len(parts) < 2:
-
-            return string  # Not enough parts to have a second-to-last underscore
-        
-        return '/'.join(parts[:-1])
-
     def maxlfq(self, longform, convert = False):
 
         r_script_path = self.lfqscript
 
-        wd = self.get_before_last_underscore(self.directory) + '/output'
+        wd = os.path.join(self.directory, 'output')
 
         print(wd)
 
