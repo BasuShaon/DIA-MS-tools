@@ -4,7 +4,7 @@
 
 ## Description
 
-Data-driven pipeline to build complete proteomes with reduced batch effects using precursor fragment intensities detected using high-throughput data-independent-acquisition mass-spectrometry (DIA-MS) . Resulting abundance follows a normal probability distribution. 
+Data-driven pipeline to build complete proteomes with reduced batch effects using precursor fragment intensities detected using data-independent-acquisition mass-spectrometry (DIA-MS). Resulting abundance follows a normal probability distribution. 
 
 Tested on 1000, 2000, and 5000 sample drug screens so far (subjected to DIA-MS [dia-PASEF & scanning SWATH modes] and DIA-NN) - more samples (1000+) & fragments (500000+) the better.
 
