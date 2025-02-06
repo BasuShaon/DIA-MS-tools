@@ -5,10 +5,10 @@ import argparse
 sys.path.append(os.path.abspath("src"))
 
 # Import devices
-from derivativefilter import DerivativeFilter
-from imputer import Imputer
-from batcher import Batcher
-from summarizer import Summarizer
+from device_derivativefilter import DerivativeFilter
+from device_imputer import Imputer
+from device_batcher import Batcher
+from device_summarizer import Summarizer
 
 # For read into pipeline
 import pandas as pd
