@@ -18,7 +18,7 @@ Modules include QC, filtration, imputation, batch correction, and a wrapper for 
 
 ## Installation 
 
-Clone 'DIA-MS-tools' locally and cd into root directory. Before running, make an input subfolder (named 'input'), and copy the following two files:
+Clone 'DIA-MS-tools' locally and cd into root directory. Before running, make an input subfolder (named 'input') and copy the following two files:
 
 ### Precursor matrix (.tsv)
 
