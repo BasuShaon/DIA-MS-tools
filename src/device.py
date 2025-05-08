@@ -2,59 +2,51 @@
 from datetime import datetime
 import pandas as pd
 import numpy as np
-import math 
 
 # Device with global functions (CV calc, plotting, saving, ...) to inherit
-class Device: 
+class Carrier: 
+    """ 
+    Carrier class that contains information for processing proteomes 
 
-    def __init__(self):
+    Attributes
+    ----------
+    frame : pd.DataFrame
+        precursor intensity data 
 
-        return
-
-    def round_up(self, n, decimals=0):
-
-        multiplier = 10**decimals
-
-        return math.ceil(n * multiplier) / multiplier
-
-    def calculate_cv(self, df):
-
-        # Calculate CV = (standard deviation / mean) * 100
-
-        # Replace 0 with NaN to avoid division by zero errors
-
-        means = df.mean().replace(0, np.nan)
-
-        stds = df.std()
-
-        cv = (stds / means) * 100
-
-        return cv
+    status: str
+        status of the carrier frame
     
-    def save_output(self, df, filename):
-        
-        tosave = df.copy()
+    batch_vec : pd.Series
+        batch data
 
-        today_date = datetime.now()
+    save_frame(filename): fuction
+        saves frame as .tsv
 
-        formatted_date = today_date.strftime("%y%m%d")
+    """
 
-        path = filename + '_' + formatted_date + '.tsv'
+    def __init__(self, filename, intensity_data, batch_data):
 
-        filename_dated  = path.split('/')[-1]
+        self.frame = intensity_data
+        self.status = 'raw'
+        self.batch_vec = batch_data
 
-        tosave.to_csv(path, sep = '\t', index = True)
+    def save_frame(self, filename):
+        """  
+        Saves carrier frame as a .tsv with status and date suffix
 
-        return filename_dated
+        Parameters:
+        --------       
+        fname : str
+            base filename, i.e. '/Desktop/SB_project1_prmatrix'
+
+        """
+
+        # construct savepath
+        thedate = datetime.now().strftime("%y%m%d")
+        savepath = filename + '_' + self.status + '_' + thedate + '.tsv'
+        dated_filename = savepath.split('/')[-1]
+        print(dated_filename)
+        # save as carrier frame as .tsv
+        self.frame.to_csv(savepath, sep = '\t', index = True)
+        return 
     
-    def calculate_cv_ID(self, frame, name):
-
-        means = frame.mean(axis=0)
-
-        stdev = frame.std(axis=0)
-
-        plot = pd.DataFrame({'Means':means,
-                         'Stdev':stdev,
-                         'ID':name})
-        
-        return plot

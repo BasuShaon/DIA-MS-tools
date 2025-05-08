@@ -9,257 +9,138 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class DerivativeFilter(Device):
-
+    """ 
+    Performs thresholding by modelling precursor detection across matrix dimensions. 
+    """
     def __init__(self, data):
+        """ 
+        Parameters:
+        -----------
+        prmatrix : pd.DataFrame
+            The precusor matrix (indexed by precursor, features samples)
 
+        step : int
+            number of intervals for thresholding between 0 - 100%  completeness,
+            default = 20 
+
+        retention_stats: pd.DataFrame
+            df containing retention statistics 
+        
+        thresh_prmatrix: pd.DataFrame
+            The thresholded prmatrix after retention max fitting
+
+        """
         self.prmatrix = data
-
-        self.data = None 
-
-        self.sample_filtered = None
-
-        self.peptide_step = None
-
-        self.sample_step = None
-
-        self.ramp = None
-
+        self.step = None
+        self.retention_stats = None
+        self.maximum = None
+        self.filtered_prmatrix = None
         return
     
-    def calculate_peptide_stats(self, step = 20):
+    def apply_retention_filter(self, manual = None):
+        """ 
+        This main function applies the calculate_sample_stats(), then 
+        find_optimal_thresholds(). 
 
-        summary = []
+        It logs the whole process during script runtime. 
 
-        self.peptide_step = step
+        Then it uses the threshold to filter the pr_matrix, and returns it.
 
-        for x in range (0,step):
+        Author: SB
 
-            gradient = x*(100/step)
+        Returns
+        -------
+        filtered_prmatrix : pd.DataFrame
+            Filtered DataFrame based on sample completeness if optimum is found, 
+            if no minimum exists, returns original DataFrame without filtering on
+            completeness 
 
-            # X percent filter, peptide level
+        """
+        df = self.prmatrix.copy()
 
-            select_peptide = self.prmatrix.isnull().mean(axis=0)*100
+        if manual is None:
+            optimal_threshold = self.maximum
+            # Plot retention curve
+            sns.lineplot(x=retention_stats.index * (100 / step), 
+                y=retention_stats['Missing Sample Percentage'])
+            plt.axvline(x=optimal_threshold, linestyle="--", color="red", 
+                label=f"Threshold: {optimal_threshold:.2f}%")
+            plt.ylabel('Missing Sample Percentage')
+            plt.xlabel('Sample Completeness (%)')
+            plt.title('Retention Threshold Detection')
+            plt.legend()
+            plt.show()
 
-            peptide_filtered = self.prmatrix.loc[:,select_peptide <= gradient]
+        else: 
+            optimal_threshold = manual
 
-            sample_miss = peptide_filtered.isnull().mean(axis=1).mean()*100
+        # Apply filtering
+        filtered_df = df[df.isnull().mean(axis=1) * 100 <= optimal_threshold]
 
-            summary.append((peptide_filtered.shape[0], peptide_filtered.shape[1], sample_miss))
-
-        filter_stats = pd.DataFrame(summary, columns = ['Samples','Precursors','Missing Sample Percentage']) 
-
-        peptides = filter_stats['Precursors']
-
-        return filter_stats
+        self.filtered_prmatrix  = filtered_df.copy()
+        return self.filtered_prmatrix
+    
+    def calculate_retention_stats(self, step = 20):
+        """ 
+        Calculates number of recovered peptides across incremental threshold intervals 
+        between 0 - 100% sample completeness.
+        Author: SB
         
-    def plot_peptide_stats(self, pasef, swath, label):
+        step : int
+            number of intervals for thresholding bteween 0 - 100%  completeness,
+            default = 20 
 
-        swath_peptide_stats = swath
+        Returns:
+        --------
+        retention_stats : pd.DataFrame
+            A DataFrame containing the retention statistics with:
+            - Samples: Number of retained samples at each threshold.
+            - Precursors: Number of retained protein features.
+            - Missing Sample Percentage: Average percentage of missing values.
 
-        pasef_peptide_stats =  pasef
-
-        xmult = 100/self.peptide_step
-
-        # Set plot parameters
-
-        plt.figure(figsize=(12, 10))
-
-        plt.rcParams['axes.labelsize'] = '30'   
-
-        plt.rcParams['axes.titlesize'] = '30' 
-
-        plt.rcParams['legend.fontsize'] = '28'  
-
-        plt.rcParams['xtick.labelsize'] = '26'  
-
-        plt.rcParams['ytick.labelsize'] = '26' 
-
-        plt.plot((pasef_peptide_stats.index)*xmult, pasef_peptide_stats['Precursors'],
-                 label = label[0], marker = 'o')
-
-        plt.plot((swath_peptide_stats.index)*xmult, swath_peptide_stats['Precursors'],
-                 label = label[1], marker = 'o')
-
-        plt.xlabel('Precursor Missing % Threshold')
-
-        plt.ylabel('Recovered Precursors')
-
-        plt.title('Precursor Threshold [Ramping 0 - 100%]')
-
-        plt.legend()
-
-        plt.grid(True)
-
-        plt.show()
-
-        return
-    
-    def calculate_sample_stats(self, step = 20):
-
+        """
         summary = []
+        # Remove rows that are entierely NaN
+        data = self.prmatrix.dropna(axis = 0, how = 'all')
 
-        # Drop NA samples
+        # Calculate retention thresholds
+        for x in range(step + 1):  
+            gradient = x * (100 / step)
+            select_sample = data.isnull().mean(axis=1) * 100
+            sample_filtered = data.loc[select_sample <= gradient, :]
+            if sample_filtered.empty:
+                sample_miss = 0.0
+            else:
+                sample_miss = sample_filtered.isnull().mean(axis=0).mean() * 100
+            summary.append((sample_filtered.shape[0], sample_filtered.shape[1], sample_miss))
 
-        self.data = self.prmatrix.dropna(axis = 0, how = 'all')
+        # Return retention data
+        self.retention_stats = pd.DataFrame(summary, columns=['Samples', 'Precursors', 
+        'Missing Sample Percentage'])
+        self.step = step
 
-        self.sample_step = step
+        return self.retention_stats
+        
+    def find_optimal_threshold(self):
+        """ 
+        Identifies the threshold at which missing sample percentage stabilizes 
+        by finding first and second derivative minima on retention data
 
-        # Calculate Sample Missing Thresholds
+        Returns
+        -------
+        float or None
+            Optimal completeness threshold or None if no stabilization point is found.
 
-        for x in range (0, step):
-
-            gradient = x*(100/step)
-
-            # X percent filter, sample level 
-
-            select_sample = self.data.isnull().mean(axis =1)*100
-
-            sample_filtered = self.data.loc[select_sample <= gradient,:]
-
-            sample_miss = sample_filtered.isnull().mean(axis=0).mean()*100
-
-            summary.append((sample_filtered.shape[0],sample_filtered.shape[1], sample_miss))
-
-        filter_stats = pd.DataFrame(summary, columns = ['Samples','Precursors','Missing Sample Percentage'])
-
-        return filter_stats
-    
-    def apply_sample_filter(self, filter_stats, ramp):
-
-        xmult = 100 / self.sample_step
-
-        self.ramp = ramp
-
-        # Calculate Missing Threshold Ramp Derivatives
-
-        samples = filter_stats['Missing Sample Percentage']
-
-        threshold = filter_stats.index
-
+        """
+        # Set threshold multiplier and calculate gradient minimum
+        xmult = 100 / self.step
+        samples = self.retention_stats['Missing Sample Percentage']
+        threshold = self.retention_stats.index
         first_derivative = np.gradient(samples, threshold)
-
         second_derivative = np.gradient(first_derivative, threshold)
-        
-        self.stat = filter_stats
+        zero_idx = np.where(np.isclose(second_derivative, 0, atol = 1e-6))[0][-1] #last zero
+        if zero_idx.size > 0:
+            self.maximum = zero_idx * mult
 
-        # Set plot parameters
 
-        plt.figure(figsize=(12, 10))
-
-        plt.rcParams['axes.labelsize'] = '30'   
-
-        plt.rcParams['axes.titlesize'] = '30' 
-
-        plt.rcParams['legend.fontsize'] = '28'  
-
-        plt.rcParams['xtick.labelsize'] = '26'  
-
-        plt.rcParams['ytick.labelsize'] = '26' 
-    
-        # Plot Precursors vs Missing Sample Percentage
-
-        recovered = self.round_up(filter_stats.iloc[int(ramp/5)]['Samples'])
-
-        plt.plot(threshold*xmult, filter_stats['Samples'], marker='o', label = str(recovered) + ' samples')
-
-        plt.xlabel('Sample Missing % Threshold')
-
-        plt.ylabel('Recovered Samples')
-
-        plt.axhline(recovered, linestyle = '--', color = 'r', label = str(ramp) + '% ramp:\n')
-
-        plt.axvline(ramp, color = 'r', linestyle = '--')
-
-        plt.title('Sample Threshold [Ramping 0 - 100%]')
-
-        plt.legend()
-
-        plt.grid(True)
-
-        plt.show()
-
-        # Set plot parameters
-
-        plt.figure(figsize=(12, 10))
-
-        plt.rcParams['axes.labelsize'] = '30'   
-
-        plt.rcParams['axes.titlesize'] = '30' 
-
-        plt.rcParams['legend.fontsize'] = '28'  
-
-        plt.rcParams['xtick.labelsize'] = '26'  
-
-        plt.rcParams['ytick.labelsize'] = '26' 
-
-        # Plot the first derivative with a horizontal line at the inflection value
-
-        plt.plot(threshold*xmult, first_derivative, marker='o')
-
-        plt.xlabel('Sample Missing % Threshold')
-
-        plt.ylabel('Rate of Change')
-
-        plt.title('First Derivative')
-
-        intercept = int(ramp/5)
-
-        first_int = self.round_up(first_derivative[intercept], 2)
-
-        second_int = self.round_up(second_derivative[intercept], 2)
-
-        plt.axhline(first_int, color = 'r', linestyle = '--', 
-            label = 'dy/dx ≈ ' + str(first_int) + ' at ' + str(ramp) + '%')
-        
-        plt.axvline(ramp, color = 'r', linestyle = '--')
-
-        plt.legend()
-
-        plt.grid(True)
-
-        plt.show()
-
-        # Set plot parameters
-
-        plt.figure(figsize=(12, 10))
-
-        plt.rcParams['axes.labelsize'] = '30'   
-
-        plt.rcParams['axes.titlesize'] = '30' 
-
-        plt.rcParams['legend.fontsize'] = '28'  
-
-        plt.rcParams['xtick.labelsize'] = '26'  
-
-        plt.rcParams['ytick.labelsize'] = '26' 
-
-        # Plot the second derivative with a horizontal line at the inflection value
-
-        plt.plot(threshold*xmult, second_derivative, marker='o')
-
-        plt.xlabel('Sample Missing % Threshold')
-
-        plt.ylabel('Acceleration')
-
-        plt.title('Second Derivative')
-
-        plt.axhline(second_int, color = 'r', linestyle = '--', 
-            label = 'ddy/dxx ≈ ' + str(self.round_up(second_int,2)) + ' at ' + str(ramp) + '%')
-        
-        plt.axvline(ramp, color = 'r', linestyle = '--')
-
-        plt.legend()
-
-        plt.grid(True)
-
-        plt.show()
-        
-        select_sample = self.data.isnull().mean(axis=1)*100
-
-        # Filter out based on diagnosed peptdide missigness
-
-        self.sample_filtered = self.data.loc[select_sample <= ramp,:]
-
-        return self.sample_filtered
