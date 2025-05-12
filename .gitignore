@@ -2,6 +2,8 @@
 *.parquet
 *.tsk
 *.csv
+*.docx
+*.doc
 
 #ignore all files in /data and /example
 

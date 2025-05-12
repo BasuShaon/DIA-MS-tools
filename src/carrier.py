@@ -1,6 +1,7 @@
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import os
 
 class Carrier: 
     """ 
@@ -18,7 +19,7 @@ class Carrier:
             saves frame in its current state 
     """
     
-    def __init__(self, intensity_data, batch_data, path):
+    def __init__(self, proteome, metadata, outerpath, projectname):
         """  
         Parameters
         ----------      
@@ -27,12 +28,13 @@ class Carrier:
             batch_data : pd.Series
                 MS Batch data 
         """
-        self.status = 'raw'
-        self.proteome = intensity_data
-        self.batch = batch_data
-        self.outer_path = path
+        self.status = None
+        self.proteome = proteome
+        self.metadata = metadata
+        self.outer_path = outerpath
+        self.projectname = projectname
 
-    def save(self, filename):
+    def save(self):
         """  
         Saves proteome as a .tsv with a specific, dated file name.
 
@@ -44,11 +46,11 @@ class Carrier:
 
         # construct savepath
         thedate = datetime.now().strftime("%y%m%d")
-        savepath = filename + '_' + self.status + '_' + thedate + '.tsv'
-        dated_filename = savepath.split('/')[-1]
-        print(dated_filename)
-        # save proteome as .tsv
-        #self.proteome.to_csv(savepath, sep = '\t', index = True)
+        savename = self.projectname + '_' + self.status + '_' + thedate + '.tsv'
+        print(savename)
+
+        self.proteome.to_csv(os.path.join(self.outer_path, savename))
+
         return 
     
     def save_joblib():

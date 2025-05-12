@@ -8,13 +8,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
 
-def condition_on_missingness(proteome):
-    missing = proteome.isna().sum(axis = 0)
-    missing = missing/proteome.shape[0]*100
-    return missing.sort_values()
+def condition_on_missingness(data_in):
+
+    missing = data_in.proteome.isna().sum(axis = 0)
+    missing = missing/data_in.proteome.shape[0]*100
+    data_in.missingness = missing.sort_values()
+    return data_in.missingness
 
 def calculate_optimum(data_in, alpha = .95):
-    missingness = condition_on_missingness(data_in.proteome)
+
+    missingness = condition_on_missingness(data_in)
 
     # Parametric stats
     mu = np.mean(missingness)
@@ -22,42 +25,40 @@ def calculate_optimum(data_in, alpha = .95):
     z = stats.norm.ppf(alpha)  # One-sided Z value
     upper_bound = mu + z * sigma
 
-    upper_bound = np.percentile(missingness, alpha*100)
-
     # Plot empirical KDE with normal overlay
-    plt.figure(figsize=(6, 4))
+    plt.figure(figsize=(6,5))
     sns.kdeplot(missingness, fill=True, label='Empirical KDE')
 
     # Plot normal PDF with same mean and std
     x_vals = np.linspace(min(missingness), max(missingness), 1000)
     normal_pdf = stats.norm.pdf(x_vals, mu, sigma)
     plt.plot(x_vals, normal_pdf, linestyle='--', label='Normal PDF', color='black')
-
     # Add vertical line at upper bound
     plt.axvline(upper_bound, color='red', linestyle='--', label=f'{int(alpha*100)}% Upper Bound = {upper_bound:.2f}%')
-
     # Labels and legend
     plt.xlabel('Sample Missingness (%)')
-    plt.title('Missingness Distribution with Parametric CI')
+    plt.title(f'{data_in.projectname}\nMissingness PDF with Parametric CI (alpha = {alpha})')
     plt.legend()
     plt.tight_layout()
+    plt.savefig(os.path.join(data_in.outer_path, data_in.projectname + str(alpha) + '_recovery_PDF.pdf'))
+    plt.show()
+    
+    # Plot pseudo CDF using cumulative retention of samples (not %)
+    thresholds = np.linspace(0, 100, 21)
+    recovered_counts = (missingness.values[None, :] <= thresholds[:, None]).sum(axis=1)
+    plt.figure(figsize = (6,5))
+    plt.plot(thresholds, recovered_counts)
+    plt.title(f'{data_in.projectname}\nPseudo CDF using sample retention (alpha = {alpha})')
+    plt.xlabel('Sample Missingness Threshold %')
+    plt.axvline(upper_bound, linestyle = '--', color = 'red')
+    plt.savefig(os.path.join(data_in.outer_path, data_in.projectname + str(alpha) + '_recovery_pseudoCDF.pdf'))
     plt.show()
 
     return upper_bound
 
-def plot_retention(thresholds, response, optimal_threshold, file_out):
-    plt.figure(figsize = (6,5))
-    plt.plot(thresholds, response)
-    plt.title(file_out)
-    plt.xlabel('Sample Missingness Threshold %')
-    plt.axvline(optimal_threshold, linestyle = '--', color = 'red')
-    plt.savefig(file_out)
-    plt.show()
-
 def detection_control(data_in, optimal_threshold):
-    missingness = condition_on_missingness(data_in.proteome)
-    thresholds = np.linspace(0, 100, 21)
-    recovered_counts = (missingness.values[None, :] <= thresholds[:, None]).sum(axis=1)
-    plot_retention(thresholds, recovered_counts, optimal_threshold, os.path.join(data_in.outer_path, 'recovery_plot.pdf'))
 
-    return data_in.proteome.loc[:,missingness<optimal_threshold]
+    data_in.proteome = data_in.proteome.loc[:,data_in.missingness<optimal_threshold]
+    data_in.status = f'dcontrol_{int(optimal_threshold)}'
+
+    return data_in
