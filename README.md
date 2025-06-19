@@ -8,7 +8,7 @@ Object-oriented, data-driven pipeline to construct complete proteomes with reduc
 
 Tested on 1000, 2000, and 5000 sample drug screens so far (subjected to DIA-MS [dia-PASEF & scanning SWATH modes]) - more samples (1000+) & fragments (500000+) the better.
 
-Modules include QC, filtration, imputation, batch correction, and a wrapper for maxLFQ algorithm.
+Modules include QC, detection control, imputation, batch correction, and a wrapper for maxLFQ algorithm.
 
 ## Requirements
 

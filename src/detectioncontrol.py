@@ -15,7 +15,7 @@ def condition_on_missingness(data_in):
     data_in.missingness = missing.sort_values()
     return data_in.missingness
 
-def calculate_optimum(data_in, alpha = .95):
+def calculate_optimum_threshold(data_in, alpha = .95):
 
     missingness = condition_on_missingness(data_in)
 
