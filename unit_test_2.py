@@ -8,9 +8,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from carrier import Carrier
 import detectioncontrol
+import imputer
 
-# %%
-
+# %% Detection Control
 
 metapath = '/Users/shaon/Desktop/50_0102/2025-02-03_AF_50-0102_metadata_with_DIANN_output.txt'
 
@@ -85,3 +85,24 @@ subset_counts.plot(
 plt.ylabel('')
 plt.tight_layout()
 plt.show()
+
+
+# %% Impute
+
+data = pd.read_csv('/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass_dcontrol_82_250513.tsv', index_col = [0,1]).T
+
+data.index = data.index.str.replace('/s-mcpb-ms03/union/is/PRO1/Data/50-0102/', '', regex=False)
+
+metadata = pd.read_csv('/Users/shaon/Desktop/50_0102/2025-02-03_AF_50-0102_metadata_with_DIANN_output.txt', 
+        index_col = 0, sep = '\t').dropna(axis = 1, how = 'all')
+
+metadata = metadata.loc[data.index]
+
+test_type = Carrier(data, metadata, '/Users/shaon/Desktop/50_0102/data', 'SB_500102_secondpass')                
+
+d1 = imputer.preprocess_data(test_type)
+d2 = imputer.compute_log2_means_and_missingness(d1)
+bound, result = imputer.detection_probability_curve(d2)
+
+d3 = imputer.mixed_imputation(d2, bound)
+d3.save()

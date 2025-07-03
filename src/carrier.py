@@ -4,35 +4,33 @@ import numpy as np
 import os
 
 class Carrier: 
-    """ 
-    Data class that contains the proteome and related processing information. 
-
-    Attributes
-    ----------
-        status : str
-            status of the carrier frame
-        proteome : pd.DataFrame
-            precursor intensity data 
-        batch : pd.Series
-            batch data
-        save(filename) : function
-            saves frame in its current state 
-    """
     
     def __init__(self, proteome, metadata, outerpath, projectname):
         """  
         Parameters
         ----------      
-            intensity_data : pd.DataFramee
+            proteome : pd.DataFramee
                 Precursor intensity data
-            batch_data : pd.Series
-                MS Batch data 
+            metadata : pd.Series
+                Associated metadata
+            outerpath : str
+                outpath to save files
+            projectname : str
+                common project suffix
         """
+
         self.status = None
         self.proteome = proteome
         self.metadata = metadata
         self.outer_path = outerpath
         self.projectname = projectname
+
+        #detection control attrs
+        self.missingness = None
+
+        #mixed imputation attrs
+        self.pr_means_log2 = None
+        self.pr_miss_proportions = None
 
     def save(self):
         """  
@@ -53,5 +51,9 @@ class Carrier:
 
         return 
     
-    def save_joblib():
-        return
+    def reindex(self):
+        """ 
+        Slice metadata by proteome index.
+        """  
+
+        self.metadata = self.metadata.loc[self.proteome.index]
