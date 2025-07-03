@@ -103,6 +103,5 @@ test_type = Carrier(data, metadata, '/Users/shaon/Desktop/50_0102/data', 'SB_500
 d1 = imputer.preprocess_data(test_type)
 d2 = imputer.compute_log2_means_and_missingness(d1)
 bound, result = imputer.detection_probability_curve(d2)
-
 d3 = imputer.mixed_imputation(d2, bound)
 d3.save()

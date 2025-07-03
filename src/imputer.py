@@ -136,8 +136,79 @@ def plot_detection_probability_curve(df, result, decision_boundary):
     plt.tight_layout()
     plt.show()
 
+def mixed_imputation_global(carrier, boundary, knn=3):
+    """
+    Performs mixed imputation on proteomics data, using:
+      - Global minimum imputation for MNAR features
+      - Global KNN imputation for MAR features (no batch separation)
 
-def mixed_imputation(carrier, boundary, knn=3):
+    Parameters:
+    -----------
+    carrier : object
+        An object with the following required attributes:
+            - carrier.proteome : pd.DataFrame
+                Raw proteomics data with samples as rows and features (precursors) as columns.
+            - carrier.metadata : pd.DataFrame
+                Metadata including a 'MS.Batch' column indicating batch membership.
+            - carrier.pr_means_log2 : pd.Series
+                Log2-transformed global mean intensities of features; used to classify MNAR/MAR.
+    boundary : float
+        Threshold used to classify features as MNAR (if mean < boundary) or MAR (if >= boundary).
+    knn : int, optional (default=3)
+        Number of neighbors to use in global KNN imputation for MAR features.
+
+    Returns:
+    --------
+    carrier : object
+        The input object with updated:
+            - carrier.proteome : pd.DataFrame
+                Imputed data with MNAR and MAR features appropriately filled.
+            - carrier.status : str
+                Set to 'dcontrol_imputed' to indicate imputation is complete.
+
+    Notes:
+    ------
+    - MNAR features are imputed using global minimum value imputation.
+    - MAR features are imputed using global KNN imputation (ignoring batch information).
+    - Columns fully missing (NaN) are dropped.
+    """
+
+    data = carrier.proteome.copy()
+
+    # Identify MNAR and MAR columns
+    mnar_cols = carrier.pr_means_log2[carrier.pr_means_log2 < boundary].index.intersection(data.columns)
+    mar_cols = data.columns.difference(mnar_cols)
+
+    # MNAR imputation with global minimum
+    min_values = data[mnar_cols].min()
+    data[mnar_cols] = data[mnar_cols].fillna(min_values)
+
+    # Check and drop fully NaN MAR columns
+    fully_na_cols = data[mar_cols].columns[data[mar_cols].isna().all()]
+    if len(fully_na_cols) > 0:
+        print(f"Dropping {fully_na_cols.size} fully NaN columns:", list(fully_na_cols))
+        data = data.drop(columns=fully_na_cols)
+        mar_cols = mar_cols.difference(fully_na_cols)
+
+    # Global KNN imputation for MAR features
+    imputer = KNNImputer(n_neighbors=knn)
+    mar_imputed_array = imputer.fit_transform(data[mar_cols])
+
+    mar_imputed_df = pd.DataFrame(
+        mar_imputed_array,
+        index=data.index,
+        columns=mar_cols
+    )
+
+    # Re-combine MNAR and MAR imputed columns
+    data_imputed = pd.concat([data[mnar_cols], mar_imputed_df], axis=1)[data.columns]
+
+    carrier.proteome = data_imputed
+    carrier.status = 'dcontrol_imputed_global'
+
+    return carrier
+
+def mixed_imputation_in_batch(carrier, boundary, knn=3):
     """
     Performs mixed imputation on proteomics data, using:
       - Global minimum imputation for MNAR features
@@ -234,7 +305,7 @@ def mixed_imputation(carrier, boundary, knn=3):
     data_imputed = pd.concat(imputed_batches).loc[data.index]
 
     carrier.proteome = data_imputed
-    carrier.status = 'dcontrol_imputed'
+    carrier.status = 'dcontrol_imputed_inbatch'
 
     return carrier
 
