@@ -1,7 +1,5 @@
 # %% Most imports for all the devices
 from datetime import datetime
-import pandas as pd
-import numpy as np
 
 # Device with global functions (CV calc, plotting, saving, ...) to inherit
 class Carrier: 

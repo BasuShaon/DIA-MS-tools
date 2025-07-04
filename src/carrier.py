@@ -32,6 +32,9 @@ class Carrier:
         self.pr_means_log2 = None
         self.pr_miss_proportions = None
 
+        #batch correction attrs
+        self.columns_index = None
+
     def save(self):
         """  
         Saves proteome as a .tsv with a specific, dated file name.
@@ -57,3 +60,16 @@ class Carrier:
         """  
 
         self.metadata = self.metadata.loc[self.proteome.index]
+
+    def describe(self):
+        """ 
+        Quick df_describe() on the current carried proteome df
+        """  
+        df = self.proteome.copy()
+        
+        print(f'min: {df.min().min()}')
+        print(f'median: {df.median().median()}')
+        print(f'zeroes: {(df == 0).sum().sum()}')
+        print(f'na: {df.isna().sum().sum()}')
+        print(f'inf: {np.isinf(df).sum().sum()}')
+

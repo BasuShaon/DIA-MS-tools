@@ -85,7 +85,7 @@ def detection_probability_curve(carrier, boundary=0.5):
         'Detection Probability': 1 - carrier.pr_miss_proportions
     }).dropna()
 
-    #carrier.df = df
+    carrier.dpc_df = df.copy()
 
     X = sm.add_constant(df['Avg Log2 Abundance'])
     y = df['Detection Probability']
@@ -97,19 +97,19 @@ def detection_probability_curve(carrier, boundary=0.5):
     decision_boundary = (np.log(boundary / (1 - boundary)) - intercept) / coef
 
     print(f"Decision boundary at {decision_boundary:.2f}")
-    plot_detection_probability_curve(df, result, decision_boundary)
+    plot_detection_probability_curve(carrier, result, decision_boundary)
 
     return round(decision_boundary, 2), result
 
 
-def plot_detection_probability_curve(df, result, decision_boundary):
+def plot_detection_probability_curve(carrier, result, decision_boundary):
     """
     Plots observed detection probabilities with the fitted logistic curve and decision boundary.
 
     Parameters
     ----------
-    df : pd.DataFrame
-        Must contain 'Avg Log2 Abundance' and 'Detection Probability' columns.
+    carrier : object
+        Must contain dpc dataframe with 'Avg Log2 Abundance' and 'Detection Probability' columns.
     result : GLMResults
         The fitted logistic regression model.
     decision_boundary : float
@@ -119,11 +119,13 @@ def plot_detection_probability_curve(df, result, decision_boundary):
     -------
     None. Displays a matplotlib plot.
     """
+    df = carrier.dpc_df.copy()
+
     X_plot = np.linspace(df['Avg Log2 Abundance'].min(), df['Avg Log2 Abundance'].max(), 200)
     X_plot_const = sm.add_constant(X_plot)
     y_pred = result.predict(X_plot_const)
 
-    plt.figure(figsize=(7, 5))
+    plt.figure(plt.figure(figsize=(20, 10)))
     plt.scatter(df['Avg Log2 Abundance'], df['Detection Probability'], alpha=0.3, color='gray', label='Observed')
     plt.plot(X_plot, y_pred, linewidth=2, label='Logistic Fit')
     plt.axvline(decision_boundary, color='orange', linestyle='--', label='Decision Boundary')
@@ -134,6 +136,7 @@ def plot_detection_probability_curve(df, result, decision_boundary):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    plt.savefig(os.path.join(carrier.outer_path, carrier.projectname + '_detectionprobabilitycurve.pdf'))
     plt.show()
 
 def mixed_imputation_global(carrier, boundary, knn=3):
