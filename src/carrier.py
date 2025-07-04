@@ -33,6 +33,7 @@ class Carrier:
         self.pr_miss_proportions = None
 
         #batch correction attrs
+        self.proteome_log2_beforecombat = None
         self.columns_index = None
 
     def save(self):
@@ -66,7 +67,7 @@ class Carrier:
         Quick df_describe() on the current carried proteome df
         """  
         df = self.proteome.copy()
-        
+
         print(f'min: {df.min().min()}')
         print(f'median: {df.median().median()}')
         print(f'zeroes: {(df == 0).sum().sum()}')

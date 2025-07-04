@@ -39,6 +39,8 @@ def batch_correct(carrier):
     batchdata = carrier.metadata['MS.Batch']
     inputdata = np.log2(carrier.proteome + 1)
 
+    carrier.proteome_log2_beforecombat = inputdata.copy()
+
     # Save and flatten MultiIndex
     carrier.columns_index = inputdata.columns
     inputdata.columns = ['|'.join(map(str, col)) for col in inputdata.columns]
@@ -63,7 +65,7 @@ def batch_correct(carrier):
     return carrier
 
 
-def CV_plots(carrier, title):
+def CV_plots(carrier, frame, title):
     """
     Computes and plots the coefficient of variation (CV) for each precursor grouped by batch.
 
@@ -89,7 +91,7 @@ def CV_plots(carrier, title):
     """
 
     # Combine expression data with batch labels
-    data = carrier.proteome.copy()
+    data = frame.copy()
     data['batchdata'] = carrier.metadata['MS.Batch'].copy()
 
     # Calculate CVs for each batch group

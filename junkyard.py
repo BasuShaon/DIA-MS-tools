@@ -117,13 +117,12 @@ d3 = imputer.mixed_imputation_in_batch(d2, bound)
 importlib.reload(combat)
 
 d4 = combat.batch_correct(d3)
+
+combat.CV_plots(d4, d4.proteome_log2_beforecombat, 'before Combat')
+
+combat.CV_plots(d4, d4.proteome, 'after Combat')
+
 #d4.save()
-
-# %%
-importlib.reload(combat)
-combat.CV_plots(d3, 'before Combat')
-combat.CV_plots(d4, 'after Combat')
-
 # %%
 
 def check(df):
@@ -132,73 +131,3 @@ def check(df):
     print(f'zeroes: {(df == 0).sum().sum()}')
     print(f'na: {df.isna().sum().sum()}')
     print(f'inf: {np.isinf(df).sum().sum()}')
-
-check(d3.proteome)
-
-check(np.log2(d3.proteome))
-
-
-# %%
-
-sample = d3.proteome.sample(n = 6)
-
-check(sample)
-
-sample = pd.Series(sample.values.flatten())
-
-sample.plot(kind = 'kde')
-# %%
-
-# Combine expression data with batch labels
-data = d4.proteome.copy()
-data['batchdata'] = d4.metadata['MS.Batch']
-
-# %%
-
-# Calculate CVs for each batch group
-def compute_cv(df):
-    return df.std() / df.mean() * 100
-
-grouped = data.groupby('batchdata')
-
-cv_by_batch = grouped.apply(compute_cv)
-
-cv_by_batch.drop('batchdata', axis = 1, inplace = True)
-
-long_df = cv_by_batch.reset_index().melt(id_vars='batchdata', var_name='Precursor', value_name='CV')
-
-
-# %%
-print(long_df)
-
-# Plot styling
-plt.rcParams.update({
-    'axes.labelsize': 30,
-    'axes.titlesize': 30,
-    'legend.fontsize': 28,
-    'xtick.labelsize': 26,
-    'ytick.labelsize': 26
-})
-
-# Generate boxplot
-plt.figure(figsize=(20, 10))
-sns.boxplot(x='batchdata', y='CV', data=long_df, showfliers=False)
-plt.xticks(rotation=45)
-plt.xlabel('Batch')
-plt.ylabel('Coefficient of Variation (%)')
-plt.title(f'Distribution of CVs for Each Precursor Across Batches: {title}')
-plt.tight_layout()
-
-# %%
-# Save plot
-plt.savefig(os.path.join(output_path, f"{title.replace(' ', '_')}.pdf"))
-plt.show()
-
-# %%
-print("long_df shape:", long_df.shape)
-print(long_df.head())
-print("Dtypes:\n", long_df.dtypes)
-print("Nulls in batchdata:", long_df['batchdata'].isnull().sum())
-print("Nulls in CV:", long_df['CV'].isnull().sum())
-print("Unique batches:", long_df['batchdata'].unique())
-print("All CVs numeric:", pd.to_numeric(long_df['CV'], errors='coerce').notnull().all())
