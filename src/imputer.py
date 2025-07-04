@@ -207,7 +207,7 @@ def mixed_imputation_global(carrier, boundary, knn=3):
     data_imputed = pd.concat([data[mnar_cols], mar_imputed_df], axis=1)[data.columns]
 
     carrier.proteome = data_imputed
-    carrier.status = 'dcontrol_imputed_global'
+    carrier.status = carrier.status + '_imputed_global'
 
     return carrier
 
@@ -308,7 +308,7 @@ def mixed_imputation_in_batch(carrier, boundary, knn=3):
     data_imputed = pd.concat(imputed_batches).loc[data.index]
 
     carrier.proteome = data_imputed
-    carrier.status = 'dcontrol_imputed_inbatch'
+    carrier.status = carrier.status + '_imputed_inbatch'
 
     return carrier
 

@@ -60,7 +60,7 @@ def batch_correct(carrier):
     outputdata = pd.DataFrame(adata.X, index=inputdata.index, columns=carrier.columns_index, dtype=float)
     
     carrier.proteome = outputdata
-    carrier.status = 'dcontrol_imputed_combat'
+    carrier.status = carrier.status + '_combat'
 
     return carrier
 
