@@ -19,7 +19,7 @@ class Carrier:
                 common project suffix
         """
 
-        self.status = None
+        self.status = ''
         self.proteome = proteome
         self.metadata = metadata
         self.outer_path = outerpath

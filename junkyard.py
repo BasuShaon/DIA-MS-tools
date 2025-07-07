@@ -11,6 +11,7 @@ from carrier import Carrier
 import detectioncontrol
 import imputer
 import combat
+import precursor2protein
 
 # %% Detection Control
 
@@ -110,11 +111,13 @@ importlib.reload(combat)
 d1 = imputer.preprocess_data(test_type)
 d2 = imputer.compute_log2_means_and_missingness(d1)
 bound, result = imputer.detection_probability_curve(d2)
+
 d3 = imputer.mixed_imputation_in_batch(d2, bound)
+
 #d3.save()
 
+
 # %%
-importlib.reload(combat)
 
 d4 = combat.batch_correct(d3)
 
@@ -123,6 +126,7 @@ combat.CV_plots(d4, d4.proteome_log2_beforecombat, 'before Combat')
 combat.CV_plots(d4, d4.proteome, 'after Combat')
 
 #d4.save()
+
 # %%
 
 def check(df):
@@ -131,3 +135,23 @@ def check(df):
     print(f'zeroes: {(df == 0).sum().sum()}')
     print(f'na: {df.isna().sum().sum()}')
     print(f'inf: {np.isinf(df).sum().sum()}')
+
+
+# %% Summarization module
+
+data = pd.read_csv('/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass_dcontrol_imputed_combat_250704.tsv', 
+                   header = [0,1], index_col = [0])
+
+
+# %%
+importlib.reload(precursor2protein)
+
+d5 = precursor2protein.format_df_maxlfq(d4)
+
+d5.save()
+
+# %%
+importlib.reload(precursor2protein)
+# Update long form filepath into module
+
+precursor2protein.maxlfq(d5, '/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass__imputed_inbatch_combat_long_250707.tsv')
