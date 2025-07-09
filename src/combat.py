@@ -5,7 +5,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 # third party imports
 
-import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,8 +13,8 @@ import scanpy as sc
 
 def batch_correct(carrier):
     """
-    Applies ComBat batch correction to proteomics data and visualizes 
-    coefficient of variation (CV) before and after correction using boxplots.
+    Applies log2 transformation, ComBat batch correction to proteomics data and 
+    visualizes coefficient of variation (CV) before and after correction using boxplots.
 
     Parameters:
     -----------
@@ -42,7 +41,7 @@ def batch_correct(carrier):
     carrier.proteome_log2_beforecombat = inputdata.copy()
 
     # Save and flatten MultiIndex
-    carrier.columns_index = inputdata.columns
+    carrier.columns_multiindex = inputdata.columns
     inputdata.columns = ['|'.join(map(str, col)) for col in inputdata.columns]
 
     # Prepare AnnData object for ComBat
@@ -57,7 +56,7 @@ def batch_correct(carrier):
     sc.pp.combat(adata, key='batch')
 
     # Convert corrected data back to DataFrame with original MultiIndex
-    outputdata = pd.DataFrame(adata.X, index=inputdata.index, columns=carrier.columns_index, dtype=float)
+    outputdata = pd.DataFrame(adata.X, index=inputdata.index, columns=carrier.columns_multiindex, dtype=float)
     
     carrier.proteome = outputdata
     carrier.status = carrier.status + '_combat'

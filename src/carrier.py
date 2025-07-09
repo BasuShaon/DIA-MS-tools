@@ -34,7 +34,11 @@ class Carrier:
 
         #batch correction attrs
         self.proteome_log2_beforecombat = None
-        self.columns_index = None
+        self.columns_multiindex = None
+
+        #maxlfq attrs
+
+        
 
     def save(self):
         """  

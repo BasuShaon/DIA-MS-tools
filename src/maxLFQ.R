@@ -24,7 +24,7 @@ if (length(args) >= 4) {
   stop("Not enough arguments provided")
 }
 
-pasef <- fread(file_path, head = TRUE, sep = '\t', dec = '.')
+pasef <- fread(file_path, head = TRUE, sep = ',', dec = '.')
 
 colnames(pasef) <- c('id', 'sample_list', 'protein_list', 'quant')
 
@@ -58,7 +58,7 @@ if (length(args) >= 4) {
   stop("Not enough arguments provided")
 }
 
-pasef <- fread(file_path, head = TRUE, sep = '\t', dec = '.')
+pasef <- fread(file_path, head = TRUE, sep = ',', dec = '.')
 
 colnames(pasef) <- c('id', 'sample_list', 'protein_list', 'quant')
 
@@ -79,4 +79,4 @@ if (convert) {
 
 write.csv2(pasef_lfq, out_path)
 
-write.csv2(pasef_lfq, out_path)
+

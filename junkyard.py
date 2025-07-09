@@ -17,36 +17,48 @@ import precursor2protein
 
 metapath = '/Users/shaon/Desktop/50_0102/2025-02-03_AF_50-0102_metadata_with_DIANN_output.txt'
 
-firstpass = pd.read_csv('/Users/shaon/Desktop/50_0102/data/SB_500102_firstpass_250320a.tsv', index_col = [1,2]).iloc[:, 1:]
+#firstpass = pd.read_csv('/Users/shaon/Desktop/50_0102/data/SB_500102_firstpass_250320a.tsv', index_col = [1,2]).iloc[:, 1:]
 
-secondpass = pd.read_csv('/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass_250320a.tsv', index_col = [1,2]).iloc[:, 1:]
+secondpass = pd.read_csv('/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass_250320a.csv', index_col = [1,2]).iloc[:, 1:]
 
 batch = pd.read_csv('/Users/shaon/Desktop/50_0102/2025-02-03_AF_50-0102_metadata_with_DIANN_output.txt', 
         index_col = 0, sep = '\t').dropna(axis = 1, how = 'all')
 
 
-zerotype = Carrier(proteome=firstpass, metadata=batch['MS.Batch'], outerpath='/Users/shaon/Desktop/50_0102/data', projectname='SB_500102_firstpass')                
+#zerotype = Carrier(proteome=firstpass, metadata=batch['MS.Batch'], outerpath='/Users/shaon/Desktop/50_0102/data', projectname='SB_500102_firstpass')                
 
-#secondtype= Carrier(proteome=secondpass, metadata=batch['MS.Batch'], outerpath='/Users/shaon/Desktop/50_0102/data', projectname='SB_500102_secondpass')                
+secondtype= Carrier(proteome=secondpass, metadata=batch['MS.Batch'], outerpath='/Users/shaon/Desktop/50_0102/data', projectname='SB_500102_secondpass')                
 
 def dcontrol(inputxx):
-    opt99 = detectioncontrol.calculate_optimum_threshold(inputxx, alpha = 0.99)
-    #opt95 = detectioncontrol.calculate_optimum_threshold(inputxx, alpha = 0.95)
-    detectioncontrol.detection_control(inputxx,opt99)
+    #opt99 = detectioncontrol.calculate_optimum_threshold(inputxx, alpha = 0.99)
+    opt95 = detectioncontrol.calculate_optimum_threshold(inputxx, alpha = 0.95)
+    detectioncontrol.detection_control(inputxx,opt95)
     inputxx.save()
 
-dcontrol(zerotype)
+dcontrol(secondtype)
 
 # %%
 
-miss = zerotype.missingness.copy()
+boundary = 82.12
+
+miss = secondtype.missingness.copy()
 miss.index = miss.index.str.split('/').str[-1]
 miss.head()
+miss.loc[miss<=boundary].describe()
+miss.loc[miss>boundary].describe()
 
-#%%
-miss.loc[miss<=85.97].describe()
-# %%
-miss.loc[miss>85.97].describe()
+miss = miss.to_frame()  
+miss['Category'] = np.where(miss.iloc[:,0] <= boundary, 'Retain', 'Drop')
+
+plt.figure(figsize=[3,6])
+
+sns.violinplot(data=miss, y=0, hue='Category', fill=True, alpha=0.4)
+plt.title('KDE of Missing Distributions')
+plt.xlabel('Value')
+plt.axhline(boundary, linestyle = '--', color = 'red')
+plt.ylabel('Density')
+plt.savefig('/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass_dcontrol_82_splitkde_250513.png')
+plt.show()
 
 # %%
 
@@ -155,3 +167,11 @@ importlib.reload(precursor2protein)
 # Update long form filepath into module
 
 precursor2protein.maxlfq(d5, '/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass__imputed_inbatch_combat_long_250707.tsv')
+
+# %%
+d5.status
+
+ #%%
+
+proteome_final = pd.read_csv('/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass__imputed_inbatch_combat_summarized_250718.tsv',
+                                sep = ';', decimal = ',', index_col = [0])
