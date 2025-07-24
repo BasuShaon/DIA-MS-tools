@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
-import scipy.optimize
 from sklearn.impute import KNNImputer
 
 def preprocess_data(carrier):
@@ -34,7 +33,7 @@ def preprocess_data(carrier):
     data = data.dropna(axis=1, how='all') # drop all-NaN columns
     data = data.loc[:, ~(data == 0).all()] # drop all-zero columns
 
-    carrier.proteome = data
+    carrier.proteome = data.T # transpose proteome in carrier object for all downstream modules 
     return carrier
 
 def compute_log2_means_and_missingness(carrier):
@@ -81,6 +80,9 @@ def detection_probability_curve(carrier, boundary=0.5):
         Abundance at the given detection probability boundary.
     result : GLMResults
         Logistic regression model fit on binned response data.
+
+    Author SB 
+    
     """
     # Raw data preparation
     df = pd.DataFrame({

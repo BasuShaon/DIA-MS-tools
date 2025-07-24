@@ -36,8 +36,8 @@ class Carrier:
         self.proteome_log2_beforecombat = None
         self.columns_multiindex = None
 
-        #maxlfq attrs
-
+        #maxlfq r comms attrs
+        self.thedate = datetime.now().strftime("%y%m%d")
         
 
     def save(self):
@@ -51,13 +51,12 @@ class Carrier:
         """
 
         # construct savepath
-        thedate = datetime.now().strftime("%y%m%d")
-        savename = self.projectname + '_' + self.status + '_' + thedate + '.tsv'
+        savename = self.projectname + '_' + self.status + '_' + self.thedate + '.tsv'
         print(savename)
 
         self.proteome.to_csv(os.path.join(self.outer_path, savename))
 
-        return 
+        return savename
     
     def reindex(self):
         """ 

@@ -41,12 +41,16 @@ def maxlfq(carrier, longform, convert = False):
 
     file_path = longform
 
-    carrier.status = carrier.status + '_summarized'
+    carrier.status = carrier.status.removesuffix('_long') +  '_summarized'
+
+    lfq_savename = carrier.projectname + '_' + carrier.status + '_' + carrier.thedate + '.tsv'
+
+    print(lfq_savename)
 
     # Ensure convert is passed as a string "TRUE" or "FALSE"
     convert_str = "TRUE" if convert else "FALSE"
 
-    command = ['Rscript', r_script_path, wd, file_path, carrier.status, convert_str]
+    command = ['Rscript', r_script_path, wd, file_path, lfq_savename, convert_str]
 
     process = subprocess.run(command, capture_output=True, text=True)
 
