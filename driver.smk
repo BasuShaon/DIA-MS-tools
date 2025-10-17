@@ -1,4 +1,5 @@
 configfile: "params.yaml"
+import os; os.makedirs("output/logs", exist_ok=True) 
 
 rule all:
     input:
