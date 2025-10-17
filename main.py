@@ -1,114 +1,118 @@
-# %% Establish absolute path
+"""
+Proteomics Data Processing Pipeline
+"""
 import sys
 import os
-import argparse
-sys.path.append(os.path.abspath("src"))
-
-# Import devices
-from device_derivativefilter import DerivativeFilter
-from device_imputer import Imputer
-from device_batcher import Batcher
-from device_summarizer import Summarizer
-
-# For read into pipeline
 import pandas as pd
+import argparse
 
-# %% Pipeline Assembly
+# Add src to path
+sys.path.append(os.path.abspath("code"))
 
-def main(matrix_fname, batchdata_fname, output_fname):
+from carrier import Carrier
+import detectioncontrol
+import imputer
+import combat
+import precursor2protein
 
-    dire = os.path.abspath(os.path.join(os.getcwd())) # path to repo 
+def main(data_df, meta_df, proj, alpha, bound):
+    # Configuration
+    DATA_DF = data_df
+    META_DF = meta_df
+    PROJECT_NAME = proj
+    ALPHA = alpha
+    BOUND = bound
+    DATA_DIR = os.path.join(os.path.dirname(__file__), 'input')
+    OUT_DIR = os.path.join(os.path.dirname(__file__), 'output')
 
-    directory = os.path.join(dire, 'input') # path for input folder
-
-    directory2 = os.path.join(dire, 'output') # path for output folder
-
-    # Failsafe if no arguments are parsed, works on local repo / unittest folder
-
-    if matrix_fname is None:
-
-        matrix_fname = 'SB_PROTAC_prmatrix_plateswap_240606a.tsv'
-
-    if batchdata_fname is None:
-
-        batchdata_fname = '20240314_AF_50-0121_metadata_plateSwapRequested.xlsx'
-
-    if output_fname is None:
-
-        output_fname = 'SB_PROTAC_prmatrix'
-
-    print(f"Matrix file: {matrix_fname}")
-
-    print(f"Batch data file: {batchdata_fname}")
-
-    print(f"Output file prefix: {output_fname}")
-
-    # Load MS fragment intensities
-
-    input_data = pd.read_csv(os.path.join(directory, matrix_fname),
-                             delimiter='\t', 
-                             index_col=[0,1], 
-                             header=[0]).T   
-
-    # Filter frags based on detection
-
-    input_filter = DerivativeFilter(input_data) 
-
-    input_sample_stats = input_filter.calculate_sample_stats(step=20)
-
-    input_filtered = input_filter.apply_sample_filter(input_sample_stats, ramp=95)
-
-    input_filter.save_output(input_filtered.T, os.path.join(directory2, output_fname + '_filtered_95'))
-
-    # Impute missing frags
-
-    input_imputer = Imputer(input_filtered, threshold=50)
-
-    input_imputer.detection_probability_curve(boundary=0.5)
-
-    input_imputer.precursor_missing_matrix(plot=True)
-
-    input_imputed = input_imputer.impute_missing_matrix(knn=3)
-
-    input_imputer.save_output(input_imputed.T, os.path.join(directory2, output_fname + '_filtered_95_imputed_50'))
-
-    # Batch-correct on MS run date
-
-    input_batcher = Batcher(input_imputed, 
-                            path=os.path.join(directory, batchdata_fname),
-                            batchID='MS.Batch',
-                            logtransform=True)
+    print("Starting proteomics pipeline...")
     
-    input_batcher.batch_correct(toPlot=True)
-
-    input_batcher.save_output(input_batcher.input.T, os.path.join(directory2, output_fname + '_filtered_95_imputed_50_ltrfm'))
+    print("\n1. Loading data...")
+    secondpass = pd.read_csv(
+        f'{DATA_DIR}/{DATA_DF}',
+        index_col=[1, 2]
+    ).iloc[:, 1:]
+    secondpass.columns = secondpass.columns.str.split('/').str[-1]
     
-    input_batcher.save_output(input_batcher.output.T, os.path.join(directory2, output_fname + '_filtered_95_imputed_50_ltrfm_batched'))
-
-    # Summarize to final proteome
-
-    input_summarizer = Summarizer(input_batcher.output, 
-                                  lfqscript=os.path.join(dire, 'maxLFQ.R'),
-                                  directory=dire)
+    metadata = pd.read_csv(
+        f'{DATA_DIR}/{META_DF}',
+        index_col=1,
+        sep=','
+    ).dropna(axis=1, how='all')
     
-    input_batched_long = input_summarizer.input_long
+    print("2. Initializing Carrier...")
+    shogoki = Carrier(
+        proteome=secondpass,
+        metadata=metadata,
+        outerpath=OUT_DIR,
+        projectname=PROJECT_NAME
+    )
+    
+    print("3. Running detection control...")
+    optimum = detectioncontrol.calculate_optimum_threshold(shogoki, alpha=ALPHA)
+    detectioncontrol.detection_control(shogoki, optimum)
+    shogoki.save()
+    
+    print("4. Running imputation...")
+    imputer.preprocess_data(shogoki)
+    imputer.compute_log2_means_and_missingness(shogoki)
+    if bound == 'Auto':
+        bound, glm = imputer.detection_probability_curve(shogoki)
+        imputer.mixed_imputation_in_batch(shogoki, bound)
+    else:
+        bound == BOUND
+    shogoki.save()
+    
+    print("5. Running batch correction...")
+    combat.batch_correct(shogoki)
+    combat.CV_plots(shogoki, shogoki.proteome_log2_beforecombat, 'before Combat')
+    combat.CV_plots(shogoki, shogoki.proteome, 'after Combat')
+    shogoki.save()
+    
+    # # MaxLFQ
+    # print("6. Running MaxLFQ...")
+    # precursor2protein.format_df_maxlfq(shogoki)
+    # shogoki.save()
+    
+    # output_path = os.path.join(
+    #     shogoki.outer_path,
+    #     f"{shogoki.projectname}_{shogoki.status}_{shogoki.thedate}.tsv"
+    # )
+    # precursor2protein.maxlfq(shogoki, output_path)
+    
+    # print(f"\n✓ Pipeline complete! Status: {shogoki.status}")
 
-    path = input_summarizer.save_output(input_batched_long, os.path.join(directory2, output_fname + '_filtered_95_imputed_50_ltrfm_batched_long'))
 
-    input_summarizer.maxlfq(longform=path, convert=False) # Set to true if you need to swap from UNIPROT to SYMBOL
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+    )
 
-# %% For commandline run
-
-if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser(description='Process some files.')
-
-    parser.add_argument('-m', '--matrix', help='Matrix file name', default=None)
-
-    parser.add_argument('-b', '--batchdata', help='Batch data file name', default=None)
-
-    parser.add_argument('-o', '--output', help='Output file name prefix', default=None)
+    parser.add_argument(
+        "-d", required=True,
+        help="Filename of the raw data CSV (relative to './input')."
+    )
+    parser.add_argument(
+        "-m", required=True,
+        help="Filename of the metadata CSV (relative to './input')."
+    )
+    parser.add_argument(
+        "-p", required=True,
+        help="Project name used as output prefix."
+    )
+    parser.add_argument(
+        "-a", type=float, default=0.99,
+        help="Alpha/significance parameter for detection control (default: 0.99)."
+    )
+    parser.add_argument(
+        "-b", default="Auto",
+        help="Boundary for MNAR/MAR split. Float or 'Auto' to fit via logistic curve (default: Auto)."
+    )
 
     args = parser.parse_args()
-
-    main(args.matrix, args.batchdata, args.output)
+    main(
+        data_df=args.d,
+        meta_df=args.m,
+        proj=args.p,
+        alpha=args.a,
+        bound=args.b,
+    )

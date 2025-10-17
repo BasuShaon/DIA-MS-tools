@@ -8,6 +8,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from sklearn.impute import KNNImputer
+import argparse
+import pickle
+from carrier import Carrier
 
 def preprocess_data(carrier):
     """
@@ -188,10 +191,10 @@ def plot_detection_probability_curve(carrier, result, decision_boundary):
 
     # Save plot
     plt.savefig(
-        os.path.join(carrier.outer_path, carrier.projectname + '_detectionprobabilitycurve.pdf'),
+        os.path.join(carrier.outerpath, carrier.projectname + '_detectionprobabilitycurve.pdf'),
         dpi=300
     )
-    plt.show()
+    # plt.show()
 
 
 def mixed_imputation_global(carrier, boundary, knn=3):
@@ -244,7 +247,7 @@ def mixed_imputation_global(carrier, boundary, knn=3):
     # Check and drop fully NaN MAR columns
     fully_na_cols = data[mar_cols].columns[data[mar_cols].isna().all()]
     if len(fully_na_cols) > 0:
-        print(f"Dropping {fully_na_cols.size} fully NaN columns:", list(fully_na_cols))
+        print(f"\nDropping {fully_na_cols.size} fully NaN columns:", list(fully_na_cols))
         data = data.drop(columns=fully_na_cols)
         mar_cols = mar_cols.difference(fully_na_cols)
 
@@ -370,4 +373,41 @@ def mixed_imputation_in_batch(carrier, boundary, knn=3):
 
     return carrier
 
-  
+
+def main(bound):
+    # Configuration
+    BOUND = bound
+
+    with open(os.path.join(os.path.dirname(__file__), "../output", "nigoki.pkl"), "rb") as f:
+        sangoki = pickle.load(f)
+
+    print("4. Running imputation...")
+    preprocess_data(sangoki)
+    compute_log2_means_and_missingness(sangoki)
+    if bound == 'Auto':
+        bound, glm = detection_probability_curve(sangoki)
+        mixed_imputation_in_batch(sangoki, bound)
+    else:
+        bound = float(bound)
+        mixed_imputation_in_batch(sangoki, bound)
+    sangoki.save()
+
+    with open(os.path.join(
+        sangoki.outerpath, 'sangoki.pkl'
+    ),'wb') as f: 
+        pickle.dump(sangoki, f)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+    )
+
+    parser.add_argument(
+        "-b", default="Auto",
+        help="Boundary for MNAR/MAR split. Float or 'Auto' to fit via logistic curve (default: Auto)."
+    )
+
+    args = parser.parse_args()
+    main(
+        bound=args.b,
+    )
+# %%

@@ -7,15 +7,29 @@ import detectioncontrol
 import imputer
 import combat
 import precursor2protein
+import pandas as pd
 
 # %% Clean up and format precursor and metadata 
 
-secondpass = pd.read_csv('/Users/shaon/Desktop/50_0102/data/SB_500102_secondpass_250320a.csv', index_col = [1,2]).iloc[:, 1:]
+data_dir = os.path.join(os.path.dirname(__file__), 'input')
+print(data_dir)
 
+secondpass = pd.read_csv(os.path.join(data_dir, 'SB_proteome-druggable-genome_KO_prmatrix-secondpass_250320a.csv'), index_col = [1,2]).iloc[:, 1:]
 secondpass.columns = secondpass.columns.str.split('/').str[-1]
 
-metadata = pd.read_csv('/Users/shaon/Desktop/50_0102/data/2025-02-03_AF_50-0102_metadata_with_DIANN_output.txt', 
-        index_col = 0, sep = '\t').dropna(axis = 1, how = 'all')
+metadata = pd.read_csv(os.path.join(data_dir, 'SB_proteome-druggable-genome_KO_metadata_251007a.csv'), 
+        index_col = 1, sep = ',').dropna(axis = 1, how = 'all')
+
+# %%
+
+secondpass_dr = pd.read_csv(
+    os.path.join(
+        data_dir, 
+        'SB_proteome-druggable-genome_DR_prmatrix-secondpass_250320a.csv'), index_col = [1,2]).iloc[:, 1:]
+
+
+metadata_dr = pd.read_csv(os.path.join(data_dir, 'SB_proteome-druggable-genome_DR_metadata_251007a.csv'), 
+        index_col = 0, sep = ',').dropna(axis = 1, how = 'all')
 
 # %% Create Carrier object 
 shogoki = Carrier(proteome=secondpass, metadata=metadata, outerpath='/Users/shaon/Desktop/50_0102/data', projectname='SB_500102_secondpass')                
@@ -46,7 +60,7 @@ precursor2protein.maxlfq(shogoki,
                                       shogoki.projectname + '_' + 
                                       shogoki.status + '_' + 
                                       shogoki.thedate + '.tsv'))
-shogoki.status()
+shogoki.status
 
 # %% Detection Control Drop out Analysis -> Add into Dcontrol Module
 

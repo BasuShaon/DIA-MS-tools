@@ -10,6 +10,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scanpy as sc
+from carrier import Carrier
+import pickle
+import argparse
 
 def batch_correct(carrier):
     """
@@ -126,5 +129,27 @@ def CV_plots(carrier, frame, title):
     plt.tight_layout()
 
     # Save plot
-    plt.savefig(os.path.join(carrier.outer_path, f"{title.replace(' ', '_')}.pdf"))
-    plt.show()
+    plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + f"{title.replace(' ', '_')}.pdf"))
+    # plt.show()
+
+
+
+def main():
+    # Configuration
+ 
+    with open(os.path.join(os.path.dirname(__file__), "../output", "sangoki.pkl"), "rb") as f:
+        yongoki = pickle.load(f)
+
+    print("5. Running batch correction...")
+    batch_correct(yongoki)
+    CV_plots(yongoki, yongoki.proteome_log2_beforecombat, 'before Combat')
+    CV_plots(yongoki, yongoki.proteome, 'after Combat')
+    yongoki.save()
+    
+    with open(os.path.join(
+        yongoki.outerpath, 'yongoki.pkl'
+    ),'wb') as f: 
+        pickle.dump(yongoki, f)
+    
+if __name__ == "__main__":
+    main()

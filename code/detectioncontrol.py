@@ -7,6 +7,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
+from carrier import Carrier
+import pickle
+import argparse
 
 def condition_on_missingness(carrier):
     """ 
@@ -28,14 +31,14 @@ def condition_on_missingness(carrier):
 
     return carrier.missingness
 
-def calculate_optimum_threshold(carrier, alpha=0.95):
+def calculate_optimum_threshold(carrier, alpha=0.99):
     """ 
     Calculates the optimal missingness threshold using a parametric confidence interval and visualizes results.
 
     Parameters
     ----------
     carrier : object
-        Data object that includes 'proteome', 'projectname', and 'outer_path'.
+        Data object that includes 'proteome', 'projectname', and 'outerpath'.
     alpha : float, optional
         Confidence level for calculating the upper bound threshold (default is 0.95).
 
@@ -63,8 +66,8 @@ def calculate_optimum_threshold(carrier, alpha=0.95):
     plt.title(f'{carrier.projectname}\nMissingness PDF with Parametric CI (alpha = {alpha})')
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(carrier.outer_path, carrier.projectname + str(alpha) + '_recovery_PDF.pdf'))
-    plt.show()
+    plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + str(alpha) + '_recovery_PDF.pdf'))
+    # plt.show()
 
     # Plot pseudo CDF
     thresholds = np.linspace(0, 100, 21)
@@ -74,8 +77,8 @@ def calculate_optimum_threshold(carrier, alpha=0.95):
     plt.title(f'{carrier.projectname}\nPseudo CDF using sample retention (alpha = {alpha})')
     plt.xlabel('Sample Missingness Threshold %')
     plt.axvline(upper_bound, linestyle='--', color='red')
-    plt.savefig(os.path.join(carrier.outer_path, carrier.projectname + str(alpha) + '_recovery_pseudoCDF.pdf'))
-    plt.show()
+    plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + str(alpha) + '_recovery_pseudoCDF.pdf'))
+    # plt.show()
 
     return upper_bound
 
@@ -101,3 +104,35 @@ def detection_control(carrier, optimal_threshold):
     carrier.status = f'dcontrol_{int(optimal_threshold)}'
 
     return carrier
+
+def main(alpha):
+    # Configuration
+    ALPHA = alpha
+
+    with open(os.path.join(os.path.dirname(__file__), "../output", "shogoki.pkl"), "rb") as f:
+        nigoki = pickle.load(f)
+
+    print("3. Running detection control...")
+    optimum = calculate_optimum_threshold(nigoki, alpha=ALPHA)
+    detection_control(nigoki, optimum)
+    nigoki.save()
+
+    with open(os.path.join(
+        nigoki.outerpath, 'nigoki.pkl'
+    ),'wb') as f: 
+        pickle.dump(nigoki, f)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+    )
+
+    parser.add_argument(
+        "-a", type=float, default=0.99, required=False,
+        help="Alpha/significance parameter for detection control (default: 0.99)."
+    )
+
+    args = parser.parse_args()
+    main(
+        alpha=args.a,
+    )
