@@ -5,7 +5,10 @@
 *.docx
 *.doc
 
-#ignore all files in /data and /example
+#ignore snakemake background folder
+.snakemake/ 
+
+#ignore all files in /input and /output
 
 input/
 output/
