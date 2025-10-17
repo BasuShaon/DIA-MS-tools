@@ -1,4 +1,4 @@
-configfile: "params.yaml"
+configfile: "driver.yaml"
 import os; os.makedirs("output/logs", exist_ok=True) 
 
 rule all:
