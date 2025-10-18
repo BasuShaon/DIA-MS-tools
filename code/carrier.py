@@ -38,6 +38,7 @@ class Carrier:
         self.pr_means_log2 = None
         self.pr_miss_proportions = None
         self.bound = None
+        self.knn = None
         self.DPC_plot = None
 
         # batch correction attrs

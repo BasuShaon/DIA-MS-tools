@@ -146,7 +146,7 @@ def main(sangoki_path):
     
     # write to disk
     with open(os.path.join(
-        yongoki.outerpath, f'yongoki_{yongoki.bound}.pkl'
+        yongoki.outerpath, f'yongoki_{yongoki.bound}_{yongoki.knn}.pkl'
     ),'wb') as f: 
         pickle.dump(yongoki, f)
     

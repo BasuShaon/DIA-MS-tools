@@ -61,16 +61,16 @@ def main(yongoki_path):
     print("6. Running MaxLFQ...")
     format_df_maxlfq(gogoki)
    
-    # gogoki.save()
-    # output_path = os.path.join(
-    #     gogoki.outerpath,
-    #     f"{gogoki.projectname}_{gogoki.status}_{gogoki.thedate}.tsv"
-    # )
-    # maxlfq(gogoki, output_path)
+    gogoki.save()
+    output_path = os.path.join(
+        gogoki.outerpath,
+        f"{gogoki.projectname}_{gogoki.status}_{gogoki.thedate}.tsv"
+    )
+    maxlfq(gogoki, output_path)
 
     # write to disk
     with open(os.path.join(
-        gogoki.outerpath, f'gogoki_{gogoki.bound}.pkl'
+        gogoki.outerpath, f'gogoki_{gogoki.bound}_{gogoki.knn}.pkl'
     ),'wb') as f: 
         pickle.dump(gogoki, f)
     

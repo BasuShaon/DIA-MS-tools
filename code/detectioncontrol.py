@@ -31,7 +31,7 @@ def calculate_optimum_threshold(carrier, alpha=0.99):
     upper_bound = mu + z * sigma
 
     # Plot KDE with normal PDF overlay
-    plt.figure(figsize=(6, 5))
+    PDF_plot = plt.figure(figsize=(6, 5))
     x_plot = missingness.dropna()  
     try:
         sns.kdeplot(x_plot, fill=True, label='Empirical KDE')   # seaborn ≥ 0.11
@@ -45,21 +45,21 @@ def calculate_optimum_threshold(carrier, alpha=0.99):
     plt.title(f'{carrier.projectname}\nMissingness PDF with Parametric CI (alpha = {alpha})')
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + str(alpha) + '_recovery_PDF.pdf'))
-    plt.close()  
+    # plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + str(alpha) + '_recovery_PDF.pdf'))
+    carrier.PDF_plot = PDF_plot
 
     # Plot pseudo CDF
     thresholds = np.linspace(0, 100, 21)
     recovered_counts = (missingness.values[None, :] <= thresholds[:, None]).sum(axis=1)
-    plt.figure(figsize=(6, 5))
+    CDF_plot = plt.figure(figsize=(6, 5))
     plt.plot(thresholds, recovered_counts)
     plt.title(f'{carrier.projectname}\nPseudo CDF using sample retention (alpha = {alpha})')
     plt.xlabel('Sample Missingness Threshold %')
     plt.axvline(upper_bound, linestyle='--', color='red')
     plt.tight_layout()
-    plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + str(alpha) + '_recovery_pseudoCDF.pdf'))
-    plt.close()  
-
+    #plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + str(alpha) + '_recovery_pseudoCDF.pdf'))
+    carrier.CDF_plot = CDF_plot
+    
     return upper_bound
 
 def detection_control(carrier, optimal_threshold):

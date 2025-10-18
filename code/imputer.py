@@ -266,7 +266,7 @@ def mixed_imputation_global(carrier, boundary, knn=3):
     data_imputed = pd.concat([data[mnar_cols], mar_imputed_df], axis=1)[data.columns]
 
     carrier.proteome = data_imputed
-    carrier.status = carrier.status + f'_imputed_global_at_{boundary}'
+    carrier.status = carrier.status + f'_imputed_global_at_{boundary}_knn_{knn}'
 
     return carrier
 
@@ -370,12 +370,12 @@ def mixed_imputation_in_batch(carrier, boundary, knn=3):
     data_imputed = pd.concat(imputed_batches).loc[data.index]
 
     carrier.proteome = data_imputed
-    carrier.status = carrier.status + f'_imputed_inbatch_at_{boundary}'
+    carrier.status = carrier.status + f'_imputed_inbatch_at_{boundary}_knn_{knn}'
 
     return carrier
 
 
-def main(bound):
+def main(bound, N):
     # Configuration
 
     with open(os.path.join(os.path.dirname(__file__), "../output", "nigoki.pkl"), "rb") as f:
@@ -388,12 +388,15 @@ def main(bound):
     compute_log2_means_and_missingness(sangoki)
 
     impu_thresh = detection_probability_curve(sangoki, float(bound))
-    print(f'Using {impu_thresh} as threshold for mixed-imputation')
-    mixed_imputation_in_batch(sangoki, impu_thresh)
+    print(f'Using {impu_thresh} as threshold for mixed-imputation (MNAR/MAR)')
+    print(f'Using {N} neighbors for knn-imputation (MAR)')
+
+    mixed_imputation_in_batch(sangoki, impu_thresh, N)
+    sangoki.knn=N
         
     # write to disk
     with open(os.path.join(sangoki.outerpath, 
-                           f'sangoki_{bound}.pkl'),'wb') as f: pickle.dump(sangoki, f)
+                           f'sangoki_{sangoki.bound}_{sangoki.knn}.pkl'),'wb') as f: pickle.dump(sangoki, f)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -404,8 +407,14 @@ if __name__ == "__main__":
         help="Boundary for MNAR/MAR split. Float or None to fit via logistic curve (default: None)."
     )
 
+    parser.add_argument(
+        "-k", default=3, type=int,
+        help="Nearest neighbors for knn imputation, default = 3."
+    )
+
     args = parser.parse_args()
     main(
         bound=args.b,
+        N=args.k
     )
 # %%

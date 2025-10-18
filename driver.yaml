@@ -1,6 +1,7 @@
 data_df: SB_proteome-druggable-genome_KO_prmatrix-secondpass_250320a.csv
 meta_df: SB_proteome-druggable-genome_KO_metadata_251007a.csv
 proj: SB_proteome-druggable-genome_KO
-alpha: [0.99] # detectioncontrol
-bound: [0.5, 0] # imputer ([0,1])
+alpha: [0.99] # alpha for dropping missing samples ; detectioncontrol
+bound: [0.5, 0] # DPC decision boundary ([0,1]) ; imputer
+knn: [3,5] # nearest neighbors for knn ; imputer
 
