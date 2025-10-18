@@ -1,5 +1,6 @@
 data_df: SB_proteome-druggable-genome_KO_prmatrix-secondpass_250320a.csv
 meta_df: SB_proteome-druggable-genome_KO_metadata_251007a.csv
 proj: SB_proteome-druggable-genome_KO
-alpha: 0.99
-bound: Auto
+alpha: [0.99] # detectioncontrol
+bound: [0.5, 0] # imputer ([0,1])
+

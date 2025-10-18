@@ -10,6 +10,7 @@
 
 #ignore all files in /input and /output
 
+config/
 input/
 output/
 unittest/

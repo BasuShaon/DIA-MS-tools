@@ -4,6 +4,10 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 import pandas as pd
 import numpy as np
+
+import matplotlib
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
@@ -12,41 +16,12 @@ import pickle
 import argparse
 
 def condition_on_missingness(carrier):
-    """ 
-    Computes the percentage of missing values per sample in the proteome and stores the sorted result.
-
-    Parameters
-    ----------
-    carrier : object
-        Data object that includes a 'proteome' DataFrame with precursor intensity data.
-
-    Returns
-    -------
-    pd.Series
-        Sorted percentage of missing values per sample, stored in `carrier.missingness`.
-    """
     missing = carrier.proteome.isna().sum(axis=0)
     missing = missing / carrier.proteome.shape[0] * 100
     carrier.missingness = missing.sort_values()
-
     return carrier.missingness
 
 def calculate_optimum_threshold(carrier, alpha=0.99):
-    """ 
-    Calculates the optimal missingness threshold using a parametric confidence interval and visualizes results.
-
-    Parameters
-    ----------
-    carrier : object
-        Data object that includes 'proteome', 'projectname', and 'outerpath'.
-    alpha : float, optional
-        Confidence level for calculating the upper bound threshold (default is 0.95).
-
-    Returns
-    -------
-    upper_bound : float
-        Optimal missingness threshold based on the upper bound of the normal distribution.
-    """
     missingness = condition_on_missingness(carrier)
 
     # Parametric stats
@@ -57,8 +32,12 @@ def calculate_optimum_threshold(carrier, alpha=0.99):
 
     # Plot KDE with normal PDF overlay
     plt.figure(figsize=(6, 5))
-    sns.kdeplot(missingness, fill=True, label='Empirical KDE')
-    x_vals = np.linspace(min(missingness), max(missingness), 1000)
+    x_plot = missingness.dropna()  
+    try:
+        sns.kdeplot(x_plot, fill=True, label='Empirical KDE')   # seaborn ≥ 0.11
+    except TypeError:
+        sns.kdeplot(x_plot, shade=True, label='Empirical KDE')  # seaborn < 0.11
+    x_vals = np.linspace(float(x_plot.min()), float(x_plot.max()), 1000) if len(x_plot) else np.linspace(0, 100, 1000)
     normal_pdf = stats.norm.pdf(x_vals, mu, sigma)
     plt.plot(x_vals, normal_pdf, linestyle='--', label='Normal PDF', color='black')
     plt.axvline(upper_bound, color='red', linestyle='--', label=f'{int(alpha * 100)}% Upper Bound = {upper_bound:.2f}%')
@@ -67,7 +46,7 @@ def calculate_optimum_threshold(carrier, alpha=0.99):
     plt.legend()
     plt.tight_layout()
     plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + str(alpha) + '_recovery_PDF.pdf'))
-    # plt.show()
+    plt.close()  
 
     # Plot pseudo CDF
     thresholds = np.linspace(0, 100, 21)
@@ -77,36 +56,19 @@ def calculate_optimum_threshold(carrier, alpha=0.99):
     plt.title(f'{carrier.projectname}\nPseudo CDF using sample retention (alpha = {alpha})')
     plt.xlabel('Sample Missingness Threshold %')
     plt.axvline(upper_bound, linestyle='--', color='red')
+    plt.tight_layout()
     plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + str(alpha) + '_recovery_pseudoCDF.pdf'))
-    # plt.show()
+    plt.close()  
 
     return upper_bound
 
-
 def detection_control(carrier, optimal_threshold):
-    """ 
-    Filters proteome data by removing samples above the missingness threshold.
-
-    Parameters
-    ----------
-    carrier : object
-        Data object containing the proteome and computed missingness.
-    optimal_threshold : float
-        Threshold for allowed percentage of missing values per sample.
-
-    Returns
-    -------
-    object
-        Modified carrier object with filtered `proteome` and updated `status`.
-    """
-
     carrier.proteome = carrier.proteome.loc[:, carrier.missingness < optimal_threshold]
     carrier.status = f'dcontrol_{int(optimal_threshold)}'
-
+    print(f"Dropped {(carrier.missingness >= optimal_threshold).sum()} samples (kept {(carrier.missingness < optimal_threshold).sum()})")
     return carrier
 
 def main(alpha):
-    # Configuration
     ALPHA = alpha
 
     with open(os.path.join(os.path.dirname(__file__), "../output", "shogoki.pkl"), "rb") as f:
@@ -115,24 +77,21 @@ def main(alpha):
     print("3. Running detection control...")
     optimum = calculate_optimum_threshold(nigoki, alpha=ALPHA)
     detection_control(nigoki, optimum)
-    nigoki.save()
 
-    with open(os.path.join(
-        nigoki.outerpath, 'nigoki.pkl'
-    ),'wb') as f: 
+    outdir = nigoki.outerpath
+    if not isinstance(outdir, str) or not os.path.isdir(outdir):
+        outdir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../output"))
+    os.makedirs(outdir, exist_ok=True)
+
+    # write to disk
+    with open(os.path.join(outdir, 'nigoki.pkl'), 'wb') as f:
         pickle.dump(nigoki, f)
 
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-    )
-
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "-a", type=float, default=0.99, required=False,
         help="Alpha/significance parameter for detection control (default: 0.99)."
     )
-
     args = parser.parse_args()
-    main(
-        alpha=args.a,
-    )
+    main(alpha=args.a)

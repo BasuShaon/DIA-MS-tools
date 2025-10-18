@@ -22,24 +22,31 @@ class Carrier:
 
         """
 
+        # base carrier attrs
         self.status = ''
         self.proteome = proteome
         self.metadata = metadata
         self.outerpath = outerpath
         self.projectname = projectname
 
-        #detection control attrs
+        # detection control attrs
         self.missingness = None
+        self.PDF_plot = None
+        self.CDF_plot = None 
 
-        #mixed imputation attrs
+        # mixed imputation attrs
         self.pr_means_log2 = None
         self.pr_miss_proportions = None
+        self.bound = None
+        self.DPC_plot = None
 
-        #batch correction attrs
+        # batch correction attrs
         self.proteome_log2_beforecombat = None
         self.columns_multiindex = None
+        self.CV_before_plot = None
+        self.CV_after_plot = None
 
-        #maxlfq r comms attrs
+        # maxlfq r comms attrs
         self.thedate = datetime.now().strftime("%y%m%d")
         
 
@@ -113,6 +120,7 @@ def init_carrier(data_df, meta_df, proj):
         projectname=PROJECT_NAME
     )
     
+    # write to disk
     with open(os.path.join(
         shogoki.outerpath, 'shogoki.pkl'
     ),'wb') as f: 

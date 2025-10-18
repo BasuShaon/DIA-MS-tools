@@ -120,36 +120,48 @@ def CV_plots(carrier, frame, title):
     })
 
     # Generate boxplot
-    plt.figure(figsize=(20, 10))
+    CV_plot = plt.figure(figsize=(20, 10))
     sns.boxplot(x='batchdata', y='CV', data=long_df, showfliers=False)
     plt.xticks(rotation=45)
     plt.xlabel('Batch')
     plt.ylabel('Coefficient of Variation (%)')
     plt.title(f'Distribution of CVs for Each Precursor Across Batches: {title}')
     plt.tight_layout()
-
+    
     # Save plot
-    plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + f"{title.replace(' ', '_')}.pdf"))
+    # plt.savefig(os.path.join(carrier.outerpath, carrier.projectname + '_' + f"{title.replace(' ', '_')}.pdf"))
     # plt.show()
+    return CV_plot
 
 
-
-def main():
-    # Configuration
+def main(sangoki_path):
  
-    with open(os.path.join(os.path.dirname(__file__), "../output", "sangoki.pkl"), "rb") as f:
+    with open(os.path.join(os.path.dirname(__file__), "..", sangoki_path), "rb") as f:
         yongoki = pickle.load(f)
 
     print("5. Running batch correction...")
     batch_correct(yongoki)
-    CV_plots(yongoki, yongoki.proteome_log2_beforecombat, 'before Combat')
-    CV_plots(yongoki, yongoki.proteome, 'after Combat')
-    yongoki.save()
+    yongoki.CV_before_plot = CV_plots(yongoki, yongoki.proteome_log2_beforecombat, 'before Combat')
+    yongoki.CV_after_plot = CV_plots(yongoki, yongoki.proteome, 'after Combat')
     
+    # write to disk
     with open(os.path.join(
-        yongoki.outerpath, 'yongoki.pkl'
+        yongoki.outerpath, f'yongoki_{yongoki.bound}.pkl'
     ),'wb') as f: 
         pickle.dump(yongoki, f)
     
+
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+    )
+
+    parser.add_argument(
+        "-i", required=True,
+        help="load sangoki_bound.pkl"
+    )
+
+    args = parser.parse_args()
+    main(
+        sangoki_path = args.i
+    )
+    

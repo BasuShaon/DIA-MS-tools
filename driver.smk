@@ -1,18 +1,22 @@
+
 configfile: "driver.yaml"
 import os; os.makedirs("output/logs", exist_ok=True) 
 
 rule all:
     input:
-        "output/shogoki.pkl",
-        "output/nigoki.pkl",
-        "output/sangoki.pkl",
-        "output/yongoki.pkl",
-        "output/gogoki.pkl",
+        # Objects
+        "output/shogoki.pkl", # carrier object
+        "output/nigoki.pkl", # detectioncontroled carrier
+        expand("output/sangoki_{bound}.pkl", bound = config["bound"]), # imputed carrier
+        expand("output/yongoki_{bound}.pkl", bound = config["bound"]), # combat corrected carrier
+        expand("output/gogoki_{bound}.pkl", bound = config["bound"]), # roll-downed carrier
+        
+        # Done files
         "output/logs/carrier.done",
         "output/logs/detectioncontrol.done",
-        "output/logs/imputer.done",
-        "output/logs/combat.done",
-        "output/logs/rollup.done"
+        expand("output/logs/imputer_{bound}.done", bound = config["bound"]),
+        expand("output/logs/combat_{bound}.done", bound = config["bound"]), 
+        expand("output/logs/rolldown_{bound}.done", bound = config["bound"]) 
 
 rule init_carrier:
     input:
@@ -49,17 +53,17 @@ rule detectioncontrol:
         touch {output.log_done}
         """
 
-rule imputer:
+rule imputer: # Fan-out point
     input:
         script = "code/imputer.py",
         nigoki = "output/nigoki.pkl"
-    output:
-        sangoki = "output/sangoki.pkl",
-        log_done = "output/logs/imputer.done"
-    log:
-        "output/logs/imputer.log"
     params:
-        bound = config["bound"]
+        bound = "{bound}"
+    output:
+        sangoki = "output/sangoki_{bound}.pkl",
+        log_done = "output/logs/imputer_{bound}.done"
+    log:
+        "output/logs/imputer_{bound}.log"
     shell:
         """
         python3 {input.script} -b {params.bound} > {log} 2>&1
@@ -69,29 +73,29 @@ rule imputer:
 rule combat:
     input:
         script = "code/combat.py",
-        sangoki = "output/sangoki.pkl"
+        sangoki = "output/sangoki_{bound}.pkl"
     output:
-        yongoki = "output/yongoki.pkl",
-        log_done = "output/logs/combat.done"
+        yongoki = "output/yongoki_{bound}.pkl",
+        log_done = "output/logs/combat_{bound}.done"
     log:
-        "output/logs/combat.log"
+        "output/logs/combat_{bound}.log"
     shell:
         """
-        python3 {input.script} > {log} 2>&1
+        python3 {input.script} -i {input.sangoki} > {log} 2>&1
         touch {output.log_done}
         """
 
-rule rollup:
+rule rolldown:
     input:
-        script = "code/rollup.py",
-        yongoki = "output/yongoki.pkl"
+        script = "code/rolldown.py",
+        yongoki = "output/yongoki_{bound}.pkl"
     output:
-        gogoki = "output/gogoki.pkl",
-        log_done = "output/logs/rollup.done"
+        gogoki = "output/gogoki_{bound}.pkl",
+        log_done = "output/logs/rolldown_{bound}.done"
     log:
-        "output/logs/rollup.log"
+        "output/logs/rolldown_{bound}.log"
     shell:
         """
-        python3 {input.script} > {log} 2>&1
+        python3 {input.script} -i {input.yongoki} > {log} 2>&1
         touch {output.log_done}
         """

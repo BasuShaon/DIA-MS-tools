@@ -123,7 +123,7 @@ def detection_probability_curve(carrier, boundary=0.5):
     print(f"Decision boundary at {decision_boundary:.2f}")
     plot_detection_probability_curve(carrier, result, decision_boundary)
 
-    return round(decision_boundary, 2), result
+    return round(decision_boundary, 2)
 
 def plot_detection_probability_curve(carrier, result, decision_boundary):
     """
@@ -154,7 +154,7 @@ def plot_detection_probability_curve(carrier, result, decision_boundary):
     y_pred = result.predict(X_plot_const)
 
     # Plotting setup
-    plt.figure(figsize=(12, 7))
+    DPC_plot = plt.figure(figsize=(12, 7))
 
     # Scatter raw data
     plt.scatter(
@@ -190,11 +190,12 @@ def plot_detection_probability_curve(carrier, result, decision_boundary):
     plt.tight_layout()
 
     # Save plot
-    plt.savefig(
-        os.path.join(carrier.outerpath, carrier.projectname + '_detectionprobabilitycurve.pdf'),
-        dpi=300
-    )
+    # plt.savefig(
+    #     os.path.join(carrier.outerpath, carrier.projectname + '_detectionprobabilitycurve.pdf'),
+    #     dpi=300
+    # )
     # plt.show()
+    carrier.DPC_plot = DPC_plot
 
 
 def mixed_imputation_global(carrier, boundary, knn=3):
@@ -265,7 +266,7 @@ def mixed_imputation_global(carrier, boundary, knn=3):
     data_imputed = pd.concat([data[mnar_cols], mar_imputed_df], axis=1)[data.columns]
 
     carrier.proteome = data_imputed
-    carrier.status = carrier.status + '_imputed_global'
+    carrier.status = carrier.status + f'_imputed_global_at_{boundary}'
 
     return carrier
 
@@ -369,41 +370,38 @@ def mixed_imputation_in_batch(carrier, boundary, knn=3):
     data_imputed = pd.concat(imputed_batches).loc[data.index]
 
     carrier.proteome = data_imputed
-    carrier.status = carrier.status + '_imputed_inbatch'
+    carrier.status = carrier.status + f'_imputed_inbatch_at_{boundary}'
 
     return carrier
 
 
 def main(bound):
     # Configuration
-    BOUND = bound
 
     with open(os.path.join(os.path.dirname(__file__), "../output", "nigoki.pkl"), "rb") as f:
         sangoki = pickle.load(f)
 
+    sangoki.bound = bound
+
     print("4. Running imputation...")
     preprocess_data(sangoki)
     compute_log2_means_and_missingness(sangoki)
-    if bound == 'Auto':
-        bound, glm = detection_probability_curve(sangoki)
-        mixed_imputation_in_batch(sangoki, bound)
-    else:
-        bound = float(bound)
-        mixed_imputation_in_batch(sangoki, bound)
-    sangoki.save()
 
-    with open(os.path.join(
-        sangoki.outerpath, 'sangoki.pkl'
-    ),'wb') as f: 
-        pickle.dump(sangoki, f)
+    impu_thresh = detection_probability_curve(sangoki, float(bound))
+    print(f'Using {impu_thresh} as threshold for mixed-imputation')
+    mixed_imputation_in_batch(sangoki, impu_thresh)
+        
+    # write to disk
+    with open(os.path.join(sangoki.outerpath, 
+                           f'sangoki_{bound}.pkl'),'wb') as f: pickle.dump(sangoki, f)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
     )
 
     parser.add_argument(
-        "-b", default="Auto",
-        help="Boundary for MNAR/MAR split. Float or 'Auto' to fit via logistic curve (default: Auto)."
+        "-b", default=None,
+        help="Boundary for MNAR/MAR split. Float or None to fit via logistic curve (default: None)."
     )
 
     args = parser.parse_args()
